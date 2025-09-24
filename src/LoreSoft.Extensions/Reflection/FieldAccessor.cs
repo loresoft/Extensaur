@@ -1,75 +1,90 @@
-using System;
-using System.Reflection;
+#nullable enable
 
 namespace System.Reflection;
 
 /// <summary>
-/// An accessor class for <see cref="FieldInfo"/>.
+/// An accessor class for <see cref="FieldInfo"/> that provides late binding access to field members.
 /// </summary>
 public class FieldAccessor : MemberAccessor
 {
-    private readonly Lazy<Func<object, object>> _getter;
-    private readonly Lazy<Action<object, object>> _setter;
+    /// <summary>
+    /// A lazy-initialized getter function for retrieving the field value.
+    /// </summary>
+    private readonly Lazy<Func<object?, object?>?> _getter;
+    
+    /// <summary>
+    /// A lazy-initialized setter action for setting the field value.
+    /// </summary>
+    private readonly Lazy<Action<object?, object?>?> _setter;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FieldAccessor"/> class.
     /// </summary>
-    /// <param name="fieldInfo">The <see cref="FieldInfo"/> instance to use for this accessor.</param>
-    public FieldAccessor(FieldInfo fieldInfo) : base(fieldInfo)
+    /// <param name="memberInfo">The <see cref="FieldInfo"/> instance to use for this accessor.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="memberInfo"/> is <see langword="null"/>.</exception>
+    public FieldAccessor(FieldInfo memberInfo) : base(memberInfo)
     {
-        if (fieldInfo == null)
-            throw new ArgumentNullException(nameof(fieldInfo));
+        if (memberInfo == null)
+            throw new ArgumentNullException(nameof(memberInfo));
 
-        Name = fieldInfo.Name;
-        MemberType = fieldInfo.FieldType;
+        Name = memberInfo.Name;
+        MemberType = memberInfo.FieldType;
 
-        _getter = new Lazy<Func<object, object>>(() => ExpressionFactory.CreateGet(fieldInfo));
+        _getter = new(() => ExpressionFactory.CreateGet(memberInfo));
         HasGetter = true;
 
-        bool isReadonly = !fieldInfo.IsInitOnly && !fieldInfo.IsLiteral;
+        bool isReadonly = memberInfo.IsInitOnly || memberInfo.IsLiteral;
         if (!isReadonly)
-            _setter = new Lazy<Action<object, object>>(() => ExpressionFactory.CreateSet(fieldInfo));
+            _setter = new(() => ExpressionFactory.CreateSet(memberInfo));
+        else
+            _setter = new(() => null);
 
         HasSetter = !isReadonly;
     }
 
     /// <summary>
-    /// Gets the type of the member.
+    /// Gets the <see cref="Type"/> of the field.
     /// </summary>
-    /// <value>The type of the member.</value>
+    /// <value>The <see cref="Type"/> of the field.</value>
     public override Type MemberType { get; }
 
     /// <summary>
-    /// Gets the name of the member.
+    /// Gets the name of the field.
     /// </summary>
-    /// <value>The name of the member.</value>
+    /// <value>The name of the field.</value>
     public override string Name { get; }
 
     /// <summary>
-    /// Gets a value indicating whether this member has getter.
+    /// Gets a value indicating whether this field has a getter.
     /// </summary>
-    /// <value><c>true</c> if this member has getter; otherwise, <c>false</c>.</value>
+    /// <value><see langword="true"/> if this field has a getter; otherwise, <see langword="false"/>.</value>
+    /// <remarks>
+    /// Field accessors always have getters unless the field is inaccessible.
+    /// </remarks>
     public override bool HasGetter { get; }
 
     /// <summary>
-    /// Gets a value indicating whether this member has setter.
+    /// Gets a value indicating whether this field has a setter.
     /// </summary>
-    /// <value><c>true</c> if this member has setter; otherwise, <c>false</c>.</value>
+    /// <value><see langword="true"/> if this field has a setter; otherwise, <see langword="false"/>.</value>
+    /// <remarks>
+    /// Fields do not have setters if they are read-only (marked with <see langword="readonly"/> or <see langword="const"/>).
+    /// </remarks>
     public override bool HasSetter { get; }
 
 
     /// <summary>
-    /// Returns the value of the member.
+    /// Returns the value of the field for the specified instance.
     /// </summary>
-    /// <param name="instance">The object whose member value will be returned.</param>
+    /// <param name="instance">The object whose field value will be returned. Can be <see langword="null"/> for static fields.</param>
     /// <returns>
-    /// The member value for the instance parameter.
+    /// The field value for the instance parameter.
     /// </returns>
-    public override object GetValue(object instance)
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the field does not have a getter or the getter could not be created.
+    /// </exception>
+    public override object? GetValue(object? instance)
     {
-        if (instance == null)
-            throw new ArgumentNullException(nameof(instance));
-
         if (_getter == null || !HasGetter)
             throw new InvalidOperationException($"Field '{Name}' does not have a getter.");
 
@@ -81,15 +96,15 @@ public class FieldAccessor : MemberAccessor
     }
 
     /// <summary>
-    /// Sets the value of the member.
+    /// Sets the value of the field for the specified instance.
     /// </summary>
-    /// <param name="instance">The object whose member value will be set.</param>
-    /// <param name="value">The new value for this member.</param>
-    public override void SetValue(object instance, object value)
+    /// <param name="instance">The object whose field value will be set. Can be <see langword="null"/> for static fields.</param>
+    /// <param name="value">The new value for this field.</param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the field does not have a setter (i.e., it's read-only) or the setter could not be created.
+    /// </exception>
+    public override void SetValue(object? instance, object? value)
     {
-        if (instance == null)
-            throw new ArgumentNullException(nameof(instance));
-
         if (_setter == null || !HasSetter)
             throw new InvalidOperationException($"Field '{Name}' does not have a setter.");
 

@@ -1,14 +1,24 @@
-using System;
+#nullable enable
+
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace System.Reflection;
 
+/// <summary>
+/// Provides factory methods for creating compiled expressions that wrap reflection operations
+/// for improved performance compared to direct reflection calls.
+/// </summary>
 internal static class ExpressionFactory
 {
-    public static Func<object, object[], object> CreateMethod(MethodInfo methodInfo)
+    /// <summary>
+    /// Creates a compiled delegate that can invoke a method with improved performance over direct reflection.
+    /// </summary>
+    /// <param name="methodInfo">The method to create a delegate for.</param>
+    /// <returns>A compiled delegate that takes an instance and parameter array and returns the method result.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="methodInfo"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown at runtime when the parameter array length doesn't match the expected parameter count.</exception>
+    public static Func<object?, object?[], object?> CreateMethod(MethodInfo methodInfo)
     {
         if (methodInfo == null)
             throw new ArgumentNullException(nameof(methodInfo));
@@ -17,33 +27,72 @@ internal static class ExpressionFactory
         var instanceParameter = Expression.Parameter(typeof(object), "instance");
         var parametersParameter = Expression.Parameter(typeof(object[]), "parameters");
 
-        // build parameter list
+        // build parameter list with validation
         var parameterExpressions = new List<Expression>();
         var paramInfos = methodInfo.GetParameters();
+
+        // Add parameter count validation if there are parameters
+        var bodyExpressions = new List<Expression>();
+        if (paramInfos.Length > 0)
+        {
+            var parameterLengthProperty = Expression.Property(parametersParameter, nameof(Array.Length));
+            var expectedCount = Expression.Constant(paramInfos.Length);
+            var countCheck = Expression.Equal(parameterLengthProperty, expectedCount);
+
+            var exceptionMessage = Expression.Constant($"Expected {paramInfos.Length} parameters but got ");
+            var actualCountString = Expression.Call(parameterLengthProperty, typeof(int).GetMethod(nameof(int.ToString), Type.EmptyTypes)!);
+            var fullMessage = Expression.Call(typeof(string).GetMethod(nameof(string.Concat), [typeof(string), typeof(string)])!, exceptionMessage, actualCountString);
+            var exception = Expression.New(typeof(ArgumentException).GetConstructor([typeof(string)])!, fullMessage);
+
+            var parameterCountCheck = Expression.IfThen(Expression.Not(countCheck), Expression.Throw(exception));
+            bodyExpressions.Add(parameterCountCheck);
+        }
+
         for (int i = 0; i < paramInfos.Length; i++)
         {
-            // (Ti)parameters[i]
             var valueObj = Expression.ArrayIndex(parametersParameter, Expression.Constant(i));
 
             Type parameterType = paramInfos[i].ParameterType;
             if (parameterType.IsByRef)
-                parameterType = parameterType.GetElementType();
+                parameterType = parameterType.GetElementType()!;
 
-            var valueCast = Expression.Convert(valueObj, parameterType);
+            // Better null handling and casting
+            Expression valueCast;
+            if (parameterType.IsValueType && Nullable.GetUnderlyingType(parameterType) == null)
+            {
+                // Non-nullable value type - need null check
+                var nullCheck = Expression.Equal(valueObj, Expression.Constant(null));
+                var defaultValue = Expression.Default(parameterType);
+                var convertValue = Expression.Convert(valueObj, parameterType);
+                valueCast = Expression.Condition(nullCheck, defaultValue, convertValue);
+            }
+            else
+            {
+                // Reference type or nullable value type
+                valueCast = CreateSafeCast(valueObj, parameterType);
+            }
 
             parameterExpressions.Add(valueCast);
         }
 
-        // non-instance for static method, or ((TInstance)instance)
-        var instanceCast = methodInfo.IsStatic ? null : Expression.Convert(instanceParameter, methodInfo.DeclaringType);
+        // Create instance cast with null checking for non-static methods
+        Expression? instanceCast = null;
+        if (!methodInfo.IsStatic)
+        {
+            var declaringType = methodInfo.DeclaringType!;
+            instanceCast = CreateSafeCast(instanceParameter, declaringType);
+        }
 
-        // static invoke or ((TInstance)instance).Method
+        // Build the method call
         var methodCall = Expression.Call(instanceCast, methodInfo, parameterExpressions);
 
-        // ((TInstance)instance).Method((T0)parameters[0], (T1)parameters[1], ...)
+        // Handle void vs non-void return types
         if (methodCall.Type == typeof(void))
         {
-            var lambda = Expression.Lambda<Action<object, object[]>>(methodCall, instanceParameter, parametersParameter);
+            bodyExpressions.Add(methodCall);
+            var body = bodyExpressions.Count == 1 ? bodyExpressions[0] : Expression.Block(bodyExpressions);
+
+            var lambda = Expression.Lambda<Action<object?, object?[]>>(body, instanceParameter, parametersParameter);
             var execute = lambda.Compile();
 
             return (instance, parameters) =>
@@ -54,37 +103,119 @@ internal static class ExpressionFactory
         }
         else
         {
-            var castMethodCall = Expression.Convert(methodCall, typeof(object));
-            var lambda = Expression.Lambda<Func<object, object[], object>>(castMethodCall, instanceParameter, parametersParameter);
+            // For non-void, box the result efficiently
+            var castMethodCall = CreateBoxingExpression(methodCall);
+            bodyExpressions.Add(castMethodCall);
+            var body = bodyExpressions.Count == 1 ? bodyExpressions[0] : Expression.Block(bodyExpressions);
 
+            var lambda = Expression.Lambda<Func<object?, object?[], object?>>(body, instanceParameter, parametersParameter);
             return lambda.Compile();
         }
     }
 
-    public static Func<object> CreateConstructor(Type type)
+    /// <summary>
+    /// Creates a compiled delegate for invoking a parameterless constructor.
+    /// </summary>
+    /// <param name="type">The type to create a constructor delegate for.</param>
+    /// <returns>A compiled delegate that creates a new instance of the type, or null if no parameterless constructor exists.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="type"/> is null.</exception>
+    public static Func<object?>? CreateConstructor(Type type)
     {
         if (type == null)
             throw new ArgumentNullException(nameof(type));
 
         var typeInfo = type.GetTypeInfo();
-
-
         var constructorInfo = typeInfo.GetConstructor(Type.EmptyTypes);
         if (constructorInfo == null)
-            throw new ArgumentException("Could not find constructor for type.", nameof(type));
+            return null;
 
         var instanceCreate = Expression.New(constructorInfo);
+        var instanceCreateCast = CreateBoxingExpression(instanceCreate);
 
-        var instanceCreateCast = typeInfo.IsValueType
-            ? Expression.Convert(instanceCreate, typeof(object))
-            : Expression.TypeAs(instanceCreate, typeof(object));
-
-        var lambda = Expression.Lambda<Func<object>>(instanceCreateCast);
-
+        var lambda = Expression.Lambda<Func<object?>>(instanceCreateCast);
         return lambda.Compile();
     }
 
-    public static Func<object, object> CreateGet(PropertyInfo propertyInfo)
+    /// <summary>
+    /// Creates a compiled delegate for invoking a constructor with parameters.
+    /// </summary>
+    /// <param name="constructorInfo">The constructor to create a delegate for.</param>
+    /// <returns>A compiled delegate that takes a parameter array and returns a new instance.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="constructorInfo"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown at runtime when the parameter array length doesn't match the expected parameter count.</exception>
+    public static Func<object?[], object?> CreateConstructor(ConstructorInfo constructorInfo)
+    {
+        if (constructorInfo == null)
+            throw new ArgumentNullException(nameof(constructorInfo));
+
+        var parametersParameter = Expression.Parameter(typeof(object[]), "parameters");
+
+        // Build parameter list with validation
+        var parameterExpressions = new List<Expression>();
+        var paramInfos = constructorInfo.GetParameters();
+
+        // Add parameter count validation
+        var bodyExpressions = new List<Expression>();
+        if (paramInfos.Length > 0)
+        {
+            var parameterLengthProperty = Expression.Property(parametersParameter, nameof(Array.Length));
+            var expectedCount = Expression.Constant(paramInfos.Length);
+            var countCheck = Expression.Equal(parameterLengthProperty, expectedCount);
+
+            var exceptionMessage = Expression.Constant($"Constructor expected {paramInfos.Length} parameters but got ");
+            var actualCountString = Expression.Call(parameterLengthProperty, typeof(int).GetMethod(nameof(int.ToString), Type.EmptyTypes)!);
+            var fullMessage = Expression.Call(typeof(string).GetMethod(nameof(string.Concat), [typeof(string), typeof(string)])!, exceptionMessage, actualCountString);
+            var exception = Expression.New(typeof(ArgumentException).GetConstructor([typeof(string)])!, fullMessage);
+
+            var parameterCountCheck = Expression.IfThen(Expression.Not(countCheck), Expression.Throw(exception));
+            bodyExpressions.Add(parameterCountCheck);
+        }
+
+        for (int i = 0; i < paramInfos.Length; i++)
+        {
+            var valueObj = Expression.ArrayIndex(parametersParameter, Expression.Constant(i));
+
+            Type parameterType = paramInfos[i].ParameterType;
+            if (parameterType.IsByRef)
+                parameterType = parameterType.GetElementType()!;
+
+            // Better null handling and casting
+            Expression valueCast;
+            if (parameterType.IsValueType && Nullable.GetUnderlyingType(parameterType) == null)
+            {
+                // Non-nullable value type - need null check
+                var nullCheck = Expression.Equal(valueObj, Expression.Constant(null));
+                var defaultValue = Expression.Default(parameterType);
+                var convertValue = Expression.Convert(valueObj, parameterType);
+                valueCast = Expression.Condition(nullCheck, defaultValue, convertValue);
+            }
+            else
+            {
+                // Reference type or nullable value type
+                valueCast = CreateSafeCast(valueObj, parameterType);
+            }
+
+            parameterExpressions.Add(valueCast);
+        }
+
+        // Create the constructor call
+        var instanceCreate = Expression.New(constructorInfo, parameterExpressions);
+        var instanceCreateCast = CreateBoxingExpression(instanceCreate);
+
+        bodyExpressions.Add(instanceCreateCast);
+        var body = bodyExpressions.Count == 1 ? bodyExpressions[0] : Expression.Block(bodyExpressions);
+
+        var lambda = Expression.Lambda<Func<object?[], object?>>(body, parametersParameter);
+        return lambda.Compile();
+    }
+
+    /// <summary>
+    /// Creates a compiled delegate for getting a property value with improved performance over direct reflection.
+    /// </summary>
+    /// <param name="propertyInfo">The property to create a getter delegate for.</param>
+    /// <returns>A compiled delegate that takes an instance and returns the property value, or null if the property is not readable.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="propertyInfo"/> is null.</exception>
+    public static Func<object?, object?>? CreateGet(PropertyInfo propertyInfo)
     {
         if (propertyInfo == null)
             throw new ArgumentNullException(nameof(propertyInfo));
@@ -93,36 +224,46 @@ internal static class ExpressionFactory
             return null;
 
         var instance = Expression.Parameter(typeof(object), "instance");
-        var declaringType = propertyInfo.DeclaringType;
-        var getMethod = propertyInfo.GetGetMethod(true);
+        var declaringType = propertyInfo.DeclaringType!;
+        var getMethod = propertyInfo.GetGetMethod(true)!;
 
         var instanceCast = CreateCast(instance, declaringType, getMethod.IsStatic);
-
         var call = Expression.Call(instanceCast, getMethod);
-        var valueCast = Expression.TypeAs(call, typeof(object));
+        var valueCast = CreateBoxingExpression(call);
 
-        var lambda = Expression.Lambda<Func<object, object>>(valueCast, instance);
+        var lambda = Expression.Lambda<Func<object?, object?>>(valueCast, instance);
         return lambda.Compile();
     }
 
-    public static Func<object, object> CreateGet(FieldInfo fieldInfo)
+    /// <summary>
+    /// Creates a compiled delegate for getting a field value with improved performance over direct reflection.
+    /// </summary>
+    /// <param name="fieldInfo">The field to create a getter delegate for.</param>
+    /// <returns>A compiled delegate that takes an instance and returns the field value.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="fieldInfo"/> is null.</exception>
+    public static Func<object?, object?>? CreateGet(FieldInfo fieldInfo)
     {
         if (fieldInfo == null)
             throw new ArgumentNullException(nameof(fieldInfo));
 
         var instance = Expression.Parameter(typeof(object), "instance");
-        var declaringType = fieldInfo.DeclaringType;
+        var declaringType = fieldInfo.DeclaringType!;
 
         var instanceCast = CreateCast(instance, declaringType, fieldInfo.IsStatic);
-
         var fieldAccess = Expression.Field(instanceCast, fieldInfo);
-        var valueCast = Expression.TypeAs(fieldAccess, typeof(object));
+        var valueCast = CreateBoxingExpression(fieldAccess);
 
-        var lambda = Expression.Lambda<Func<object, object>>(valueCast, instance);
+        var lambda = Expression.Lambda<Func<object?, object?>>(valueCast, instance);
         return lambda.Compile();
     }
 
-    public static Action<object, object> CreateSet(PropertyInfo propertyInfo)
+    /// <summary>
+    /// Creates a compiled delegate for setting a property value with improved performance over direct reflection.
+    /// </summary>
+    /// <param name="propertyInfo">The property to create a setter delegate for.</param>
+    /// <returns>A compiled delegate that takes an instance and value to set, or null if the property is not writable.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="propertyInfo"/> is null.</exception>
+    public static Action<object?, object?>? CreateSet(PropertyInfo propertyInfo)
     {
         if (propertyInfo == null)
             throw new ArgumentNullException(nameof(propertyInfo));
@@ -133,21 +274,27 @@ internal static class ExpressionFactory
         var instance = Expression.Parameter(typeof(object), "instance");
         var value = Expression.Parameter(typeof(object), "value");
 
-        var declaringType = propertyInfo.DeclaringType;
+        var declaringType = propertyInfo.DeclaringType!;
         var propertyType = propertyInfo.PropertyType;
-        var setMethod = propertyInfo.GetSetMethod(true);
+        var setMethod = propertyInfo.GetSetMethod(true)!;
 
         var instanceCast = CreateCast(instance, declaringType, setMethod.IsStatic);
-        var valueCast = CreateCast(value, propertyType, false);
+        var valueCast = CreateSafeCast(value, propertyType);
 
         var call = Expression.Call(instanceCast, setMethod, valueCast);
         var parameters = new[] { instance, value };
 
-        var lambda = Expression.Lambda<Action<object, object>>(call, parameters);
+        var lambda = Expression.Lambda<Action<object?, object?>>(call, parameters);
         return lambda.Compile();
     }
 
-    public static Action<object, object> CreateSet(FieldInfo fieldInfo)
+    /// <summary>
+    /// Creates a compiled delegate for setting a field value with improved performance over direct reflection.
+    /// </summary>
+    /// <param name="fieldInfo">The field to create a setter delegate for.</param>
+    /// <returns>A compiled delegate that takes an instance and value to set.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="fieldInfo"/> is null.</exception>
+    public static Action<object?, object?>? CreateSet(FieldInfo fieldInfo)
     {
         if (fieldInfo == null)
             throw new ArgumentNullException(nameof(fieldInfo));
@@ -155,31 +302,82 @@ internal static class ExpressionFactory
         var instance = Expression.Parameter(typeof(object), "instance");
         var value = Expression.Parameter(typeof(object), "value");
 
-        var declaringType = fieldInfo.DeclaringType;
+        var declaringType = fieldInfo.DeclaringType!;
         var fieldType = fieldInfo.FieldType;
 
         var instanceCast = CreateCast(instance, declaringType, fieldInfo.IsStatic);
-        var valueCast = CreateCast(value, fieldType, false);
+        var valueCast = CreateSafeCast(value, fieldType);
 
         var member = Expression.Field(instanceCast, fieldInfo);
         var assign = Expression.Assign(member, valueCast);
 
         var parameters = new[] { instance, value };
 
-        var lambda = Expression.Lambda<Action<object, object>>(assign, parameters);
+        var lambda = Expression.Lambda<Action<object?, object?>>(assign, parameters);
         return lambda.Compile();
     }
 
+    /// <summary>
+    /// Creates an optimized boxing expression that uses Convert for value types and TypeAs for reference types
+    /// </summary>
+    /// <param name="expression">The expression to box.</param>
+    /// <returns>An expression that boxes the input expression to object type.</returns>
+    private static Expression CreateBoxingExpression(Expression expression)
+    {
+        if (expression.Type == typeof(object))
+            return expression;
 
-    private static UnaryExpression CreateCast(ParameterExpression instance, Type declaringType, bool isStatic)
+        return expression.Type.GetTypeInfo().IsValueType
+            ? Expression.Convert(expression, typeof(object))
+            : Expression.TypeAs(expression, typeof(object));
+    }
+
+    /// <summary>
+    /// Creates a safe cast expression with proper null handling
+    /// </summary>
+    /// <param name="source">The source expression to cast.</param>
+    /// <param name="targetType">The target type to cast to.</param>
+    /// <returns>An expression that safely casts the source to the target type.</returns>
+    private static Expression CreateSafeCast(Expression source, Type targetType)
+    {
+        if (source.Type == targetType)
+            return source;
+
+        var targetTypeInfo = targetType.GetTypeInfo();
+
+        // Handle nullable value types
+        var underlyingType = Nullable.GetUnderlyingType(targetType);
+        if (underlyingType != null)
+        {
+            // Nullable<T> - convert to T? 
+            var nullCheck = Expression.Equal(source, Expression.Constant(null));
+            var nullValue = Expression.Constant(null, targetType);
+            var convertValue = Expression.Convert(source, targetType);
+            return Expression.Condition(nullCheck, nullValue, convertValue);
+        }
+
+        // Handle non-nullable value types
+        if (targetTypeInfo.IsValueType)
+        {
+            return Expression.Convert(source, targetType);
+        }
+
+        // Handle reference types - TypeAs is safer and slightly faster than Convert for reference types
+        return Expression.TypeAs(source, targetType);
+    }
+
+    /// <summary>
+    /// Creates a cast expression for instance parameters
+    /// </summary>
+    /// <param name="instance">The instance parameter expression.</param>
+    /// <param name="declaringType">The declaring type to cast the instance to.</param>
+    /// <param name="isStatic">Whether the member is static (no instance cast needed).</param>
+    /// <returns>A cast expression for the instance, or null if the member is static.</returns>
+    private static Expression? CreateCast(ParameterExpression instance, Type declaringType, bool isStatic)
     {
         if (isStatic)
             return null;
 
-        // value as T is slightly faster than (T)value, so if it's not a value type, use that
-        if (declaringType.GetTypeInfo().IsValueType)
-            return Expression.Convert(instance, declaringType);
-        else
-            return Expression.TypeAs(instance, declaringType);
+        return CreateSafeCast(instance, declaringType);
     }
 }

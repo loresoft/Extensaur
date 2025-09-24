@@ -1,13 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11018.127 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoreSoft.Extensions", "src\LoreSoft.Extensions\LoreSoft.Extensions.csproj", "{67E6AC70-1373-4807-A1A6-4BC14AE3471D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{D8C0701C-0F0A-44D2-8003-DDD39A74BC3C}"
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
+		LoreSoft.Extensions.Reflection.nuspec = LoreSoft.Extensions.Reflection.nuspec
 		README.md = README.md
 	EndProjectSection
 EndProject

@@ -1,105 +1,156 @@
+#nullable enable
+
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace System.Reflection;
 
 /// <summary>
-/// An interface for member information
+/// An interface that provides comprehensive information about a member, including reflection metadata and database mapping details.
 /// </summary>
+/// <remarks>
+/// This interface serves as a foundation for member accessors and provides both basic reflection information
+/// and database-specific mapping metadata. It's commonly used in ORM scenarios where properties need to be
+/// mapped to database columns with additional metadata like keys, foreign keys, and concurrency tokens.
+/// </remarks>
 public interface IMemberInformation
 {
     /// <summary>
-    /// Gets the type of the member.
+    /// Gets the <see cref="Type"/> of the member.
     /// </summary>
-    /// <value>The type of the member.</value>
+    /// <value>The <see cref="Type"/> of the member, such as the property type or field type.</value>
     Type MemberType { get; }
 
     /// <summary>
-    /// Gets the member info.
+    /// Gets the <see cref="Reflection.MemberInfo"/> that describes this member.
     /// </summary>
-    /// <value>The member info.</value>
+    /// <value>The <see cref="Reflection.MemberInfo"/> instance containing reflection metadata for this member.</value>
     MemberInfo MemberInfo { get; }
 
     /// <summary>
     /// Gets the name of the member.
     /// </summary>
-    /// <value>The name of the member.</value>
+    /// <value>The name of the member as defined in the source code.</value>
     string Name { get; }
 
     /// <summary>
-    /// Gets the database column name that a property is mapped to
+    /// Gets the database column name that this member is mapped to.
     /// </summary>
     /// <value>
-    /// The database column name that a property is mapped to
+    /// The database column name that this member is mapped to. This value comes from the <see cref="ColumnAttribute.Name"/> property.
+    /// If no <see cref="ColumnAttribute"/> is present, returns the member name.
     /// </value>
     string Column { get; }
 
     /// <summary>
-    /// Gets the database provider specific data type of the column the property is mapped to
+    /// Gets the database provider specific data type of the column this member is mapped to.
     /// </summary>
     /// <value>
-    /// The database provider specific data type of the column the property is mapped to
+    /// The database provider specific data type of the column this member is mapped to,
+    /// such as "varchar(50)", "int", or "decimal(18,2)". This value comes from the <see cref="ColumnAttribute.TypeName"/> property.
+    /// Returns <see langword="null"/> if no <see cref="ColumnAttribute"/> is present or if <see cref="ColumnAttribute.TypeName"/> is not specified.
     /// </value>
-    string ColumnType { get; }
+    string? ColumnType { get; }
 
     /// <summary>
-    /// Gets the zero-based order of the column the property is mapped to
+    /// Gets the zero-based order of the column this member is mapped to.
     /// </summary>
     /// <value>
-    /// The zero-based order of the column the property is mapped to
+    /// The zero-based order of the column this member is mapped to, used for controlling column ordering
+    /// in database schema generation. This value comes from the <see cref="ColumnAttribute.Order"/> property.
+    /// Returns <see langword="null"/> if no <see cref="ColumnAttribute"/> is present or if <see cref="ColumnAttribute.Order"/> is not specified.
     /// </value>
     int? ColumnOrder { get; }
 
     /// <summary>
-    /// Gets a value indicating that this property is the unique identify for the entity
+    /// Gets a value indicating whether this member represents the unique identifier for the entity.
     /// </summary>
     /// <value>
-    ///   <c>true</c> if this property is a primary key; otherwise, <c>false</c>.
+    /// <see langword="true"/> if this member is a primary key; otherwise, <see langword="false"/>.
+    /// This value is determined by the presence of the <see cref="KeyAttribute"/>.
     /// </value>
+    /// <remarks>
+    /// Primary key members are typically used as unique identifiers in database tables and are often
+    /// involved in relationship mapping and entity tracking scenarios.
+    /// </remarks>
     bool IsKey { get; }
 
     /// <summary>
-    /// Gets a value indicating that this property should be excluded from database mapping
+    /// Gets a value indicating whether this member should be excluded from database mapping.
     /// </summary>
     /// <value>
-    ///   <c>true</c> if this property should be excluded from database mapping; otherwise, <c>false</c>.
+    /// <see langword="true"/> if this member should be excluded from database mapping; otherwise, <see langword="false"/>.
+    /// This value is determined by the presence of the <see cref="NotMappedAttribute"/>.
     /// </value>
+    /// <remarks>
+    /// Members marked as not mapped are typically computed properties, navigation properties,
+    /// or properties that should not be persisted to the database.
+    /// </remarks>
     bool IsNotMapped { get; }
 
     /// <summary>
-    /// Gets a value indicating that this property is database generated
+    /// Gets a value indicating whether this member's value is generated by the database.
     /// </summary>
     /// <value>
-    ///   <c>true</c> if this property is database generated; otherwise, <c>false</c>.
+    /// <see langword="true"/> if this member's value is database generated; otherwise, <see langword="false"/>.
+    /// This value is determined by the presence of the <see cref="DatabaseGeneratedAttribute"/>
+    /// with a <see cref="DatabaseGeneratedAttribute.DatabaseGeneratedOption"/> 
+    /// other than <see cref="DatabaseGeneratedOption.None"/>.
     /// </value>
+    /// <remarks>
+    /// Database generated members include identity columns, computed columns, and columns with default values.
+    /// These members typically should not be included in INSERT statements.
+    /// </remarks>
     bool IsDatabaseGenerated { get; }
 
     /// <summary>
-    /// Gets a value indicating that this property participates in optimistic concurrency check
+    /// Gets a value indicating whether this member participates in optimistic concurrency checking.
     /// </summary>
     /// <value>
-    ///   <c>true</c> if this property participates in optimistic concurrency check; otherwise, <c>false</c>.
+    /// <see langword="true"/> if this member participates in optimistic concurrency checking; otherwise, <see langword="false"/>.
+    /// This value is determined by the presence of the <see cref="ConcurrencyCheckAttribute"/>.
     /// </value>
+    /// <remarks>
+    /// Concurrency check members are used to detect concurrent modifications to the same entity.
+    /// Common examples include timestamp/rowversion columns or version number properties.
+    /// </remarks>
     bool IsConcurrencyCheck { get; }
 
     /// <summary>
-    /// Gets a value indicating the name of the associated navigation property or associated foreign key(s)
+    /// Gets the name of the associated navigation property or foreign key(s) for this member.
     /// </summary>
     /// <value>
-    ///   A value indicating the name of the associated navigation property or associated foreign key(s)
+    /// The name of the associated navigation property or foreign key(s), or <see langword="null"/> if this member
+    /// is not associated with a foreign key relationship. This value comes from the <see cref="ForeignKeyAttribute.Name"/> property.
+    /// Returns <see langword="null"/> if no <see cref="ForeignKeyAttribute"/> is present.
     /// </value>
-    string ForeignKey { get; }
+    /// <remarks>
+    /// This property is used to establish relationships between entities in ORM scenarios.
+    /// It can reference either the navigation property name or the foreign key column name(s).
+    /// </remarks>
+    string? ForeignKey { get; }
 
     /// <summary>
-    /// Gets a value indicating whether this member has getter.
+    /// Gets a value indicating whether this member has a getter method or accessor.
     /// </summary>
     /// <value>
-    /// 	<c>true</c> if this member has getter; otherwise, <c>false</c>.
+    /// <see langword="true"/> if this member has a getter; otherwise, <see langword="false"/>.
     /// </value>
+    /// <remarks>
+    /// This indicates whether the member's value can be read. For properties, this corresponds to having a get accessor.
+    /// For fields, this is typically always <see langword="true"/> unless the field is inaccessible.
+    /// </remarks>
     bool HasGetter { get; }
 
     /// <summary>
-    /// Gets a value indicating whether this member has setter.
+    /// Gets a value indicating whether this member has a setter method or accessor.
     /// </summary>
     /// <value>
-    /// 	<c>true</c> if this member has setter; otherwise, <c>false</c>.
+    /// <see langword="true"/> if this member has a setter; otherwise, <see langword="false"/>.
     /// </value>
+    /// <remarks>
+    /// This indicates whether the member's value can be modified. For properties, this corresponds to having a set accessor.
+    /// For fields, this is <see langword="false"/> for readonly or const fields.
+    /// </remarks>
     bool HasSetter { get; }
 }

@@ -1,0 +1,356 @@
+using System.Buffers;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+#nullable enable
+
+namespace System;
+
+/// <summary>
+/// A high-performance, stack-friendly string builder that minimizes heap allocations.
+/// Uses a buffer (stack or pooled) to build up a string efficiently.
+/// Dispose must be called to return any rented arrays to the pool.
+/// </summary>
+public ref partial struct ValueStringBuilder
+{
+    private char[]? _arrayToReturnToPool;
+    private Span<char> _chars;
+    private int _position;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ValueStringBuilder"/> struct using the provided buffer.
+    /// </summary>
+    /// <param name="initialBuffer">The initial character buffer to use.</param>
+    public ValueStringBuilder(Span<char> initialBuffer)
+    {
+        _arrayToReturnToPool = null;
+        _chars = initialBuffer;
+        _position = 0;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ValueStringBuilder"/> struct with a specified initial capacity.
+    /// </summary>
+    /// <param name="initialCapacity">The number of characters the builder can initially store.</param>
+    public ValueStringBuilder(int initialCapacity)
+    {
+        _arrayToReturnToPool = ArrayPool<char>.Shared.Rent(initialCapacity);
+        _chars = _arrayToReturnToPool;
+        _position = 0;
+    }
+
+    /// <summary>
+    /// Gets the number of characters currently in the builder.
+    /// </summary>
+    public readonly int Length => _position;
+
+    /// <summary>
+    /// Gets the total number of characters the builder can hold without resizing.
+    /// </summary>
+    public readonly int Capacity => _chars.Length;
+
+    /// <summary>
+    /// Ensures the builder has at least the specified capacity.
+    /// </summary>
+    /// <param name="capacity">The minimum capacity required.</param>
+    public void EnsureCapacity(int capacity)
+    {
+        if ((uint)capacity > (uint)_chars.Length)
+            Grow(capacity - _position);
+    }
+
+    /// <summary>
+    /// Gets a reference to the first character in the buffer.
+    /// </summary>
+    public ref char GetPinnableReference() => ref MemoryMarshal.GetReference(_chars);
+
+    /// <summary>
+    /// Gets a reference to the first character in the buffer, optionally null-terminating the buffer.
+    /// </summary>
+    /// <param name="terminate">If true, ensures a null character after the current length.</param>
+    public ref char GetPinnableReference(bool terminate)
+    {
+        if (terminate)
+        {
+            EnsureCapacity(Length + 1);
+            _chars[Length] = '\0';
+        }
+        return ref MemoryMarshal.GetReference(_chars);
+    }
+
+    /// <summary>
+    /// Gets a reference to the character at the specified index.
+    /// </summary>
+    /// <param name="index">The index of the character.</param>
+    public ref char this[int index] => ref _chars[index];
+
+    /// <summary>
+    /// Converts the builder's contents to a string and disposes the builder.
+    /// </summary>
+    /// <returns>The string representation of the builder's contents.</returns>
+    public override string ToString()
+    {
+        string s = _chars[.._position].ToString();
+
+        Dispose();
+        return s;
+    }
+
+    /// <summary>
+    /// Gets the underlying character buffer.
+    /// </summary>
+    public Span<char> RawChars => _chars;
+
+    /// <summary>
+    /// Returns a span around the contents of the builder.
+    /// </summary>
+    /// <param name="terminate">Ensures that the builder has a null char after <see cref="Length"/>.</param>
+    /// <returns>A read-only span of the builder's contents.</returns>
+    public ReadOnlySpan<char> AsSpan(bool terminate)
+    {
+        if (!terminate)
+            return _chars[.._position];
+
+        EnsureCapacity(Length + 1);
+        _chars[Length] = '\0';
+        return _chars[.._position];
+    }
+
+    /// <summary>
+    /// Returns a span around the contents of the builder.
+    /// </summary>
+    public readonly ReadOnlySpan<char> AsSpan() => _chars[.._position];
+
+    /// <summary>
+    /// Returns a span around the contents of the builder, starting at the specified index.
+    /// </summary>
+    /// <param name="start">The starting index.</param>
+    public readonly ReadOnlySpan<char> AsSpan(int start) => _chars[start.._position];
+
+    /// <summary>
+    /// Returns a span around a range of the contents of the builder.
+    /// </summary>
+    /// <param name="start">The starting index.</param>
+    /// <param name="length">The number of characters.</param>
+    public readonly ReadOnlySpan<char> AsSpan(int start, int length) => _chars.Slice(start, length);
+
+    /// <summary>
+    /// Attempts to copy the contents of the builder to the specified destination span.
+    /// Disposes the builder if successful or not.
+    /// </summary>
+    /// <param name="destination">The destination span.</param>
+    /// <param name="charsWritten">The number of characters written.</param>
+    /// <returns>True if the copy succeeded; otherwise, false.</returns>
+    public bool TryCopyTo(Span<char> destination, out int charsWritten)
+    {
+        if (_chars[.._position].TryCopyTo(destination))
+        {
+            charsWritten = _position;
+            Dispose();
+            return true;
+        }
+        else
+        {
+            charsWritten = 0;
+            Dispose();
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Inserts a character value at the specified index, repeating it a given number of times.
+    /// </summary>
+    /// <param name="index">The index at which to insert.</param>
+    /// <param name="value">The character to insert.</param>
+    /// <param name="count">The number of times to insert the character.</param>
+    public void Insert(int index, char value, int count)
+    {
+        if (_position > _chars.Length - count)
+            Grow(count);
+
+        int remaining = _position - index;
+
+        _chars.Slice(index, remaining).CopyTo(_chars[(index + count)..]);
+        _chars.Slice(index, count).Fill(value);
+
+        _position += count;
+    }
+
+    /// <summary>
+    /// Inserts a string at the specified index.
+    /// </summary>
+    /// <param name="index">The index at which to insert.</param>
+    /// <param name="s">The string to insert.</param>
+    public void Insert(int index, string? s)
+    {
+        if (s == null)
+            return;
+
+        int count = s.Length;
+
+        if (_position > (_chars.Length - count))
+            Grow(count);
+
+        int remaining = _position - index;
+        _chars.Slice(index, remaining).CopyTo(_chars[(index + count)..]);
+
+        s.CopyTo(_chars[index..]);
+        _position += count;
+    }
+
+    /// <summary>
+    /// Appends a character to the end of the builder.
+    /// </summary>
+    /// <param name="c">The character to append.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Append(char c)
+    {
+        int pos = _position;
+        Span<char> chars = _chars;
+        if ((uint)pos < (uint)chars.Length)
+        {
+            chars[pos] = c;
+            _position = pos + 1;
+        }
+        else
+        {
+            GrowAndAppend(c);
+        }
+    }
+
+    /// <summary>
+    /// Appends a string to the end of the builder.
+    /// </summary>
+    /// <param name="s">The string to append.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Append(string? s)
+    {
+        if (s == null)
+            return;
+
+        int pos = _position;
+        if (s.Length == 1 && (uint)pos < (uint)_chars.Length)
+        {
+            _chars[pos] = s[0];
+            _position = pos + 1;
+        }
+        else
+        {
+            AppendSlow(s);
+        }
+    }
+
+    private void AppendSlow(string s)
+    {
+        int pos = _position;
+        if (pos > _chars.Length - s.Length)
+            Grow(s.Length);
+
+        s.CopyTo(_chars[pos..]);
+        _position += s.Length;
+    }
+
+    /// <summary>
+    /// Appends a character to the end of the builder a specified number of times.
+    /// </summary>
+    /// <param name="c">The character to append.</param>
+    /// <param name="count">The number of times to append the character.</param>
+    public void Append(char c, int count)
+    {
+        if (_position > _chars.Length - count)
+            Grow(count);
+
+        Span<char> dst = _chars.Slice(_position, count);
+        for (int i = 0; i < dst.Length; i++)
+            dst[i] = c;
+
+        _position += count;
+    }
+
+    /// <summary>
+    /// Appends a span of characters to the end of the builder.
+    /// </summary>
+    /// <param name="value">The span of characters to append.</param>
+    public void Append(scoped ReadOnlySpan<char> value)
+    {
+        int pos = _position;
+        if (pos > _chars.Length - value.Length)
+            Grow(value.Length);
+
+        value.CopyTo(_chars[_position..]);
+        _position += value.Length;
+    }
+
+    /// <summary>
+    /// Reserves space at the end of the builder and returns a span that can be written to directly.
+    /// </summary>
+    /// <param name="length">The number of characters to reserve.</param>
+    /// <returns>A span of the reserved space.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<char> AppendSpan(int length)
+    {
+        int origPos = _position;
+        if (origPos > _chars.Length - length)
+            Grow(length);
+
+        _position = origPos + length;
+        return _chars.Slice(origPos, length);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void GrowAndAppend(char c)
+    {
+        Grow(1);
+        Append(c);
+    }
+
+    /// <summary>
+    /// Resize the internal buffer either by doubling current buffer size or
+    /// by adding <paramref name="additionalCapacityBeyondPos"/> to
+    /// <see cref="_position"/> whichever is greater.
+    /// </summary>
+    /// <param name="additionalCapacityBeyondPos">
+    /// Number of chars requested beyond current position.
+    /// </param>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void Grow(int additionalCapacityBeyondPos)
+    {
+        Debug.Assert(additionalCapacityBeyondPos > 0);
+        Debug.Assert(_position > _chars.Length - additionalCapacityBeyondPos, "Grow called incorrectly, no resize is needed.");
+
+        const uint ArrayMaxLength = 0x7FFFFFC7; // same as Array.MaxLength
+
+        // Increase to at least the required size (_pos + additionalCapacityBeyondPos), but try
+        // to double the size if possible, bounding the doubling to not go beyond the max array length.
+        int newCapacity = (int)Math.Max(
+            (uint)(_position + additionalCapacityBeyondPos),
+            Math.Min((uint)_chars.Length * 2, ArrayMaxLength));
+
+        // Make sure to let Rent throw an exception if the caller has a bug and the desired capacity is negative.
+        // This could also go negative if the actual required length wraps around.
+        char[] poolArray = ArrayPool<char>.Shared.Rent(newCapacity);
+
+        _chars[.._position].CopyTo(poolArray);
+
+        char[]? toReturn = _arrayToReturnToPool;
+        _chars = _arrayToReturnToPool = poolArray;
+
+        if (toReturn != null)
+            ArrayPool<char>.Shared.Return(toReturn);
+    }
+
+    /// <summary>
+    /// Returns any rented arrays to the pool and resets the builder.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Dispose()
+    {
+        char[]? toReturn = _arrayToReturnToPool;
+
+        this = default; // for safety, to avoid using pooled array if this instance is erroneously appended to again
+
+        if (toReturn != null)
+            ArrayPool<char>.Shared.Return(toReturn);
+    }
+}

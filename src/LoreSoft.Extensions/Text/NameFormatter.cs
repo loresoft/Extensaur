@@ -98,8 +98,8 @@ public static class NameFormatter
         int colonIndex = expression.IndexOf(':');
         if (colonIndex > 0)
         {
-            format = expression[(colonIndex + 1)..];
-            expression = expression[..colonIndex];
+            format = expression.Substring(colonIndex + 1);
+            expression = expression.Substring(0, colonIndex);
         }
 
         // better way to support more dictionary generics?

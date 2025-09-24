@@ -1,62 +1,93 @@
+#nullable enable
+
 using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace System.Reflection;
 
 /// <summary>
-/// An accessor class for <see cref="MethodInfo"/>.
+/// An accessor class for <see cref="MethodInfo"/> that provides high-performance method invocation through compiled expressions.
 /// </summary>
+/// <remarks>
+/// This class implements the <see cref="IMethodAccessor"/> interface and uses lazy-loaded compiled expressions
+/// to provide fast method invocation while maintaining the flexibility of reflection. The compiled expressions
+/// are created using the <see cref="ExpressionFactory"/> which generates optimized delegates for method calls.
+/// </remarks>
 [DebuggerDisplay("Name: {Name}")]
 public class MethodAccessor : IMethodAccessor
 {
-    private readonly Lazy<Func<object, object[], object>> _invoker;
+    /// <summary>
+    /// A lazy-initialized invoker function for calling the method with high performance.
+    /// </summary>
+    private readonly Lazy<Func<object?, object?[], object?>> _invoker;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MethodAccessor"/> class.
     /// </summary>
-    /// <param name="methodInfo">The method info.</param>
+    /// <param name="methodInfo">The <see cref="MethodInfo"/> instance that describes the method to access.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="methodInfo"/> is <see langword="null"/>.</exception>
     public MethodAccessor(MethodInfo methodInfo)
     {
-        if (methodInfo == null)
+        if (methodInfo is null)
             throw new ArgumentNullException(nameof(methodInfo));
 
         MethodInfo = methodInfo;
         Name = methodInfo.Name;
-        _invoker = new Lazy<Func<object, object[], object>>(() => ExpressionFactory.CreateMethod(MethodInfo));
+
+        _invoker = new Lazy<Func<object?, object?[], object?>>(() => ExpressionFactory.CreateMethod(MethodInfo));
     }
 
     /// <summary>
-    /// Gets the method info.
+    /// Gets the <see cref="System.Reflection.MethodInfo"/> that describes this method.
     /// </summary>
+    /// <value>The <see cref="System.Reflection.MethodInfo"/> instance containing reflection metadata for this method.</value>
     public MethodInfo MethodInfo { get; }
 
     /// <summary>
-    /// Gets the name of the member.
+    /// Gets the name of the method.
     /// </summary>
-    /// <value>
-    /// The name of the member.
-    /// </value>
+    /// <value>The name of the method as defined in the source code.</value>
     public string Name { get; }
 
     /// <summary>
-    /// Invokes the method on the specified <paramref name="instance"/>.
+    /// Invokes the method on the specified instance with the provided arguments.
     /// </summary>
-    /// <param name="instance">The object on which to invoke the method. If a method is static, this argument is ignored.</param>
-    /// <param name="arguments">An argument list for the invoked method.</param>
+    /// <param name="instance">The object on which to invoke the method. Can be <see langword="null"/> for static methods.</param>
+    /// <param name="arguments">An argument list for the invoked method. The arguments must match the method's parameter types and count.</param>
     /// <returns>
-    /// An object containing the return value of the invoked method.
+    /// An object containing the return value of the invoked method, or <see langword="null"/> if the method returns <see langword="void"/>
+    /// or if the method's return value is <see langword="null"/>.
     /// </returns>
-    public object Invoke(object instance, params object[] arguments)
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the method invoker could not be created or when attempting to invoke an instance method with a <see langword="null"/> instance,
+    /// or when the instance type is incompatible with the method's declaring type.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when the number of arguments doesn't match the method's parameter count, or when argument types are incompatible with the method's parameter types.
+    /// </exception>
+    /// <exception cref="TargetInvocationException">
+    /// Thrown when the invoked method throws an exception. The original exception can be found in the <see cref="Exception.InnerException"/> property.
+    /// </exception>
+    public object? Invoke(object? instance, params object?[] arguments)
     {
-        return _invoker.Value.Invoke(instance, arguments);
+        var method = _invoker.Value;
+        if (method is null)
+            throw new InvalidOperationException($"The method '{Name}' cannot be invoked.");
+
+        return method.Invoke(instance, arguments);
     }
 
     /// <summary>
-    /// Gets the method key using a hash code from the name and paremeter types.
+    /// Gets a unique hash code key for a method based on its name and parameter types.
     /// </summary>
     /// <param name="name">The name of the method.</param>
-    /// <param name="parameterTypes">The method parameter types.</param>
-    /// <returns>The method key</returns>
+    /// <param name="parameterTypes">The method parameter types used to distinguish overloaded methods.</param>
+    /// <returns>A hash code that uniquely identifies the method signature for caching and lookup purposes.</returns>
+    /// <remarks>
+    /// This method is used internally for method caching and lookup scenarios where methods need to be
+    /// identified by their signature (name + parameter types) to handle method overloading correctly.
+    /// The hash code is computed using a combination of the method name and all parameter types.
+    /// </remarks>
     internal static int GetKey(string name, IEnumerable<Type> parameterTypes)
     {
         int hashCode = -243844509;

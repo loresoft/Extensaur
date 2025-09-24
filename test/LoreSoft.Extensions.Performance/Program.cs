@@ -20,8 +20,12 @@ internal class Program
             .AddExporter(MarkdownExporter.GitHub)
             .AddDiagnoser(MemoryDiagnoser.Default)
             .AddJob(
-                CreateJob(ClrRuntime.Net48),
-                CreateJob(CoreRuntime.Core80)
+                //CreateJob(ClrRuntime.Net48),
+                //CreateJob(CoreRuntime.Core50),
+                //CreateJob(CoreRuntime.Core60),
+                //CreateJob(CoreRuntime.Core70),
+                CreateJob(CoreRuntime.Core80),
+                CreateJob(CoreRuntime.Core90)
             )
             .WithOption(ConfigOptions.JoinSummary, true)
             .WithOrderer(new DefaultOrderer(SummaryOrderPolicy.FastestToSlowest));

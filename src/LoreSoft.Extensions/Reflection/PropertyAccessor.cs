@@ -1,65 +1,97 @@
+#nullable enable
+
 namespace System.Reflection;
 
 /// <summary>
-/// An accessor class for <see cref="PropertyInfo"/>.
+/// An accessor class for <see cref="PropertyInfo"/> that provides high-performance property access through compiled expressions.
 /// </summary>
+/// <remarks>
+/// This class extends <see cref="MemberAccessor"/> to provide specialized functionality for property access.
+/// It uses lazy-loaded compiled expressions to provide fast property getting and setting while maintaining
+/// the flexibility of reflection. The compiled expressions are created using the <see cref="ExpressionFactory"/>
+/// which generates optimized delegates for property access operations.
+/// </remarks>
 public class PropertyAccessor : MemberAccessor
 {
-    private readonly Lazy<Func<object, object>> _getter;
-    private readonly Lazy<Action<object, object>> _setter;
+    /// <summary>
+    /// A lazy-initialized getter function for retrieving the property value with high performance.
+    /// </summary>
+    private readonly Lazy<Func<object, object?>?> _getter;
+    
+    /// <summary>
+    /// A lazy-initialized setter action for setting the property value with high performance.
+    /// </summary>
+    private readonly Lazy<Action<object, object?>?> _setter;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PropertyAccessor"/> class.
     /// </summary>
-    /// <param name="propertyInfo">The <see cref="PropertyInfo"/> instance to use for this accessor.</param>
-    public PropertyAccessor(PropertyInfo propertyInfo) : base(propertyInfo)
+    /// <param name="memberInfo">The <see cref="PropertyInfo"/> instance that describes the property to access.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="memberInfo"/> is <see langword="null"/>.</exception>
+    public PropertyAccessor(PropertyInfo memberInfo) : base(memberInfo)
     {
-        if (propertyInfo == null)
-            throw new ArgumentNullException(nameof(propertyInfo));
+        if (memberInfo == null)
+            throw new ArgumentNullException(nameof(memberInfo));
 
-        Name = propertyInfo.Name;
-        MemberType = propertyInfo.PropertyType;
+        Name = memberInfo.Name;
+        MemberType = memberInfo.PropertyType;
 
-        HasGetter = propertyInfo.CanRead;
-        _getter = new Lazy<Func<object, object>>(() => ExpressionFactory.CreateGet(propertyInfo));
+        HasGetter = memberInfo.CanRead;
+        _getter = new Lazy<Func<object, object?>?>(() => ExpressionFactory.CreateGet(memberInfo));
 
-        HasSetter = propertyInfo.CanWrite;
-        _setter = new Lazy<Action<object, object>>(() => ExpressionFactory.CreateSet(propertyInfo));
+        HasSetter = memberInfo.CanWrite;
+        _setter = new Lazy<Action<object, object?>?>(() => ExpressionFactory.CreateSet(memberInfo));
     }
 
     /// <summary>
-    /// Gets the type of the member.
+    /// Gets the <see cref="Type"/> of the property.
     /// </summary>
-    /// <value>The type of the member.</value>
+    /// <value>The <see cref="Type"/> of the property as defined by <see cref="PropertyInfo.PropertyType"/>.</value>
     public override Type MemberType { get; }
 
     /// <summary>
-    /// Gets the name of the member.
+    /// Gets the name of the property.
     /// </summary>
-    /// <value>The name of the member.</value>
+    /// <value>The name of the property as defined in the source code.</value>
     public override string Name { get; }
 
     /// <summary>
-    /// Gets a value indicating whether this member has getter.
+    /// Gets a value indicating whether this property has a getter accessor.
     /// </summary>
-    /// <value><c>true</c> if this member has getter; otherwise, <c>false</c>.</value>
+    /// <value><see langword="true"/> if this property has a getter; otherwise, <see langword="false"/>.</value>
+    /// <remarks>
+    /// This value is determined by the <see cref="PropertyInfo.CanRead"/> property, which indicates
+    /// whether the property has a get accessor that can be invoked.
+    /// </remarks>
     public override bool HasGetter { get; }
 
     /// <summary>
-    /// Gets a value indicating whether this member has setter.
+    /// Gets a value indicating whether this property has a setter accessor.
     /// </summary>
-    /// <value><c>true</c> if this member has setter; otherwise, <c>false</c>.</value>
+    /// <value><see langword="true"/> if this property has a setter; otherwise, <see langword="false"/>.</value>
+    /// <remarks>
+    /// This value is determined by the <see cref="PropertyInfo.CanWrite"/> property, which indicates
+    /// whether the property has a set accessor that can be invoked. This includes init-only properties.
+    /// </remarks>
     public override bool HasSetter { get; }
 
-
     /// <summary>
-    /// Returns the value of the member.
+    /// Returns the value of the property for the specified instance.
     /// </summary>
-    /// <param name="instance">The object whose member value will be returned.</param>
+    /// <param name="instance">The instance whose property value will be returned. Can be <see langword="null"/> for static properties.</param>
     /// <returns>
-    /// The member value for the instance parameter.
+    /// The property value for the instance parameter, or <see langword="null"/> if the property value is <see langword="null"/>.
     /// </returns>
-    public override object GetValue(object instance)
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the property does not have a getter or the getter could not be created.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when the instance type is incompatible with the property's declaring type.
+    /// </exception>
+    /// <exception cref="TargetInvocationException">
+    /// Thrown when the property getter throws an exception. The original exception can be found in the <see cref="Exception.InnerException"/> property.
+    /// </exception>
+    public override object? GetValue(object? instance)
     {
         if (_getter == null || !HasGetter)
             throw new InvalidOperationException($"Property '{Name}' does not have a getter.");
@@ -68,15 +100,24 @@ public class PropertyAccessor : MemberAccessor
         if (get == null)
             throw new InvalidOperationException($"Property '{Name}' does not have a getter.");
 
-        return get(instance);
+        return get(instance!);
     }
 
     /// <summary>
-    /// Sets the value of the member.
+    /// Sets the value of the property for the specified instance.
     /// </summary>
-    /// <param name="instance">The object whose member value will be set.</param>
-    /// <param name="value">The new value for this member.</param>
-    public override void SetValue(object instance, object value)
+    /// <param name="instance">The instance whose property value will be set. Can be <see langword="null"/> for static properties.</param>
+    /// <param name="value">The new value for this property. The value should be compatible with the property's type.</param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the property does not have a setter (i.e., it's read-only) or the setter could not be created.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when the instance type is incompatible with the property's declaring type, or when the value type is incompatible with the property type.
+    /// </exception>
+    /// <exception cref="TargetInvocationException">
+    /// Thrown when the property setter throws an exception. The original exception can be found in the <see cref="Exception.InnerException"/> property.
+    /// </exception>
+    public override void SetValue(object? instance, object? value)
     {
         if (_setter == null || !HasSetter)
             throw new InvalidOperationException($"Property '{Name}' does not have a setter.");
@@ -85,6 +126,6 @@ public class PropertyAccessor : MemberAccessor
         if (set == null)
             throw new InvalidOperationException($"Property '{Name}' does not have a setter.");
 
-        set(instance, value);
+        set(instance!, value);
     }
 }
