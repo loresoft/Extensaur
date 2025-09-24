@@ -6,7 +6,7 @@ using System.Reflection;
 
 using AwesomeAssertions;
 
-namespace LoreSoft.Extensions.Tests.Reflection;
+namespace Extensaur.Tests.Reflection;
 
 public class TypeAccessorTests
 {
@@ -20,19 +20,19 @@ public class TypeAccessorTests
         public DateTime DateTimeProperty { get; set; } = new(2023, 1, 1);
         public string? NullableStringProperty { get; set; } = null;
         public int? NullableIntProperty { get; set; } = null;
-        
+
         public string ReadOnlyProperty { get; } = "ReadOnlyValue";
         public string WriteOnlyProperty { private get; set; } = "WriteOnlyValue";
-        
+
         public static string StaticProperty { get; set; } = "StaticValue";
         private string PrivateProperty { get; set; } = "PrivateValue";
-        
+
         [Column("custom_column_name")]
         public string ColumnAttributeProperty { get; set; } = "ColumnValue";
-        
+
         [Key]
         public int KeyProperty { get; set; } = 1;
-        
+
         [NotMapped]
         public string NotMappedProperty { get; set; } = "NotMappedValue";
 
@@ -519,7 +519,7 @@ public class TypeAccessorTests
         // Arrange
         var accessor = new TypeAccessor(typeof(TestClass));
 
-        // Act  
+        // Act
         var result = accessor.FindProperty<TestClass, int>(t => t.IntProperty);
 
         // Assert
@@ -568,7 +568,7 @@ public class TypeAccessorTests
         // Assert
         result.Should().NotBeNull();
         result.Should().NotBeEmpty();
-        
+
         var propertyNames = result.Select(p => p.Name).ToList();
         propertyNames.Should().Contain("StringProperty");
         propertyNames.Should().Contain("IntProperty");
@@ -588,7 +588,7 @@ public class TypeAccessorTests
         // Assert
         result.Should().NotBeNull();
         result.Should().NotBeEmpty();
-        
+
         var propertyNames = result.Select(p => p.Name).ToList();
         propertyNames.Should().Contain("StringProperty");
         propertyNames.Should().NotContain("StaticProperty"); // Should not contain static properties
@@ -605,7 +605,7 @@ public class TypeAccessorTests
 
         // Assert
         result.Should().NotBeNull();
-        
+
         var propertyNames = result.Select(p => p.Name).ToList();
         propertyNames.Should().Contain("PrivateProperty");
     }
@@ -845,7 +845,7 @@ public class TypeAccessorTests
         // Act
         var accessor1 = TypeAccessor.GetAccessor<TestClass>();
         var accessor2 = TypeAccessor.GetAccessor(typeof(TestClass));
-        
+
         var property1 = accessor1.FindProperty("StringProperty");
         var property2 = accessor2.FindProperty("StringProperty");
 

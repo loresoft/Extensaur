@@ -4,7 +4,7 @@ using System.Reflection;
 
 using AwesomeAssertions;
 
-namespace LoreSoft.Extensions.Tests.Reflection;
+namespace Extensaur.Tests.Reflection;
 
 public class LateBinderTests
 {
@@ -17,10 +17,10 @@ public class LateBinderTests
         public DateTime DateTimeProperty { get; set; } = new(2023, 1, 1);
         public string? NullableStringProperty { get; set; } = null;
         public int? NullableIntProperty { get; set; } = null;
-        
+
         public string ReadOnlyProperty { get; } = "ReadOnlyValue";
         public string WriteOnlyProperty { private get; set; } = "WriteOnlyValue";
-        
+
         public static string StaticProperty { get; set; } = "StaticValue";
         private string PrivateProperty { get; set; } = "PrivateValue";
 
@@ -330,7 +330,7 @@ public class LateBinderTests
     public void FindField_WithStaticField_ReturnsFieldAccessor()
     {
         // Static fields require Static binding flags
-        // Act  
+        // Act
         var result = LateBinder.FindField(typeof(TestClass), "StaticField", BindingFlags.Public | BindingFlags.Static);
 
         // Assert
@@ -416,7 +416,7 @@ public class LateBinderTests
     {
         // Note: This test assumes there's both a property and field with the same name
         // Since our TestClass doesn't have this scenario, we'll test with existing members
-        
+
         // Act - This should find the property since properties are searched first
         var result = LateBinder.Find(typeof(TestClass), "StringProperty");
 
@@ -1167,7 +1167,7 @@ public class LateBinderTests
         {
             // Act & Assert - Static property via instance (this won't work with static properties directly)
             var instance = new TestClass();
-            
+
             // For static properties, we need to use the instance methods differently
             // We'll test finding the static property accessor instead
             var staticPropertyAccessor = LateBinder.FindProperty(typeof(TestClass), "StaticProperty", BindingFlags.Public | BindingFlags.Static);

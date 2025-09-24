@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
   <metadata>
-    <id>LoreSoft.Extensions.Reflection</id>
+    <id>Extensaur.Reflection</id>
     <version>1.0.0</version>
     <authors>LoreSoft</authors>
     <developmentDependency>true</developmentDependency>
@@ -9,16 +9,16 @@
     <license type="expression">MIT</license>
     <icon>logo.png</icon>
     <readme>README.md</readme>
-    <projectUrl>https://github.com/loresoft/LoreSoft.Extensions</projectUrl>
+    <projectUrl>https://github.com/loresoft/Extensaur</projectUrl>
     <description>High-performance reflection utilities for .NET using compiled expressions. Provides TypeAccessor, LateBinder, and member accessors for efficient property, field and method access with support for Data Annotations.</description>
     <copyright>Copyright © 2025 LoreSoft</copyright>
     <tags>reflection compiled-expressions type-accessor late-binding property-accessor field-accessor method-accessor data-annotations member-access</tags>
-    <repository type="git" url="https://github.com/loresoft/LoreSoft.Extensions" />
+    <repository type="git" url="https://github.com/loresoft/Extensaur" />
   </metadata>
   <files>
     <file src="logo.png" target="logo.png" />
-    <file src="src\LoreSoft.Extensions\Reflection\README.md" target="README.md"/>
-    <file src="src\LoreSoft.Extensions\Reflection\*.props" target="build/" />
-    <file src="src\LoreSoft.Extensions\Reflection\*.cs" target="contentFiles/cs/net8.0/Reflection/"/>
+    <file src="src\Extensaur\Reflection\README.md" target="README.md"/>
+    <file src="src\Extensaur\Reflection\*.props" target="build/" />
+    <file src="src\Extensaur\Reflection\*.cs" target="contentFiles/cs/net8.0/Reflection/"/>
   </files>
 </package>

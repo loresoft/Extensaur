@@ -5,7 +5,7 @@ using System.Reflection;
 
 using AwesomeAssertions;
 
-namespace LoreSoft.Extensions.Tests.Reflection;
+namespace Extensaur.Tests.Reflection;
 
 public class PropertyAccessorTests
 {
@@ -18,30 +18,30 @@ public class PropertyAccessorTests
         public DateTime DateTimeProperty { get; set; } = new(2023, 1, 1);
         public string? NullableStringProperty { get; set; } = null;
         public int? NullableIntProperty { get; set; } = null;
-        
+
         public string ReadOnlyProperty { get; } = "ReadOnlyValue";
         public string WriteOnlyProperty { private get; set; } = "WriteOnlyValue";
-        
+
         public static string StaticProperty { get; set; } = "StaticPropertyValue";
         public static string StaticReadOnlyProperty { get; } = "StaticReadOnlyValue";
-        
+
         private string PrivateProperty { get; set; } = "PrivateValue";
-        
+
         [Column("custom_column_name")]
         public string ColumnAttributeProperty { get; set; } = "ColumnValue";
-        
+
         [Key]
         public int KeyProperty { get; set; } = 1;
-        
+
         [NotMapped]
         public string NotMappedProperty { get; set; } = "NotMappedValue";
-        
+
         [ConcurrencyCheck]
         public string ConcurrencyProperty { get; set; } = "ConcurrencyValue";
-        
+
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int DatabaseGeneratedProperty { get; set; } = 0;
-        
+
         [ForeignKey("RelatedEntity")]
         public int ForeignKeyProperty { get; set; } = 1;
 
@@ -72,13 +72,13 @@ public class PropertyAccessorTests
     public class TestClassWithIndexer
     {
         private readonly Dictionary<string, object?> _data = new();
-        
+
         public object? this[string key]
         {
             get => _data.TryGetValue(key, out var value) ? value : null;
             set => _data[key] = value;
         }
-        
+
         public string NormalProperty { get; set; } = "Normal";
     }
 
@@ -836,9 +836,9 @@ public class PropertyAccessorTests
         var properties = typeof(TestClassWithIndexer).GetProperties()
             .Where(p => p.Name != "Item") // Skip indexer
             .ToArray();
-        
+
         Assert.NotEmpty(properties);
-        
+
         var propertyInfo = properties.First(p => p.Name == nameof(TestClassWithIndexer.NormalProperty));
         var accessor = new PropertyAccessor(propertyInfo);
         var instance = new TestClassWithIndexer();
@@ -857,18 +857,18 @@ public class PropertyAccessorTests
         var propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.StringProperty))!;
         var accessor = new PropertyAccessor(propertyInfo);
         var instance = new TestClass();
-        
+
         // Act & Assert - Initial value
         accessor.GetValue(instance).Should().Be("DefaultPropertyValue");
         accessor.HasGetter.Should().BeTrue();
         accessor.HasSetter.Should().BeTrue();
         accessor.Name.Should().Be("StringProperty");
         accessor.MemberType.Should().Be(typeof(string));
-        
+
         // Act & Assert - Set new value
         accessor.SetValue(instance, "ModifiedValue");
         accessor.GetValue(instance).Should().Be("ModifiedValue");
-        
+
         // Act & Assert - Set null value
         accessor.SetValue(instance, null);
         accessor.GetValue(instance).Should().BeNull();

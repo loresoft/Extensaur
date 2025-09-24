@@ -3,18 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.0.11018.127 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoreSoft.Extensions", "src\LoreSoft.Extensions\LoreSoft.Extensions.csproj", "{67E6AC70-1373-4807-A1A6-4BC14AE3471D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Extensaur", "src\Extensaur\Extensaur.csproj", "{67E6AC70-1373-4807-A1A6-4BC14AE3471D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{D8C0701C-0F0A-44D2-8003-DDD39A74BC3C}"
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
-		LoreSoft.Extensions.Reflection.nuspec = LoreSoft.Extensions.Reflection.nuspec
+		Extensaur.Reflection.nuspec = Extensaur.Reflection.nuspec
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoreSoft.Extensions.Tests", "test\LoreSoft.Extensions.Tests\LoreSoft.Extensions.Tests.csproj", "{BC0FC9BE-7771-4DB1-9BA2-66186716C31D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Extensaur.Tests", "test\Extensaur.Tests\Extensaur.Tests.csproj", "{BC0FC9BE-7771-4DB1-9BA2-66186716C31D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoreSoft.Extensions.Performance", "test\LoreSoft.Extensions.Performance\LoreSoft.Extensions.Performance.csproj", "{65BA8D47-67B5-47E7-9091-C0DB2AE5DA71}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extensaur.Performance", "test\Extensaur.Performance\Extensaur.Performance.csproj", "{65BA8D47-67B5-47E7-9091-C0DB2AE5DA71}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

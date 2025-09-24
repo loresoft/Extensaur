@@ -7,7 +7,7 @@ using BenchmarkDotNet.Order;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Environments;
 
-namespace LoreSoft.Extensions.Performance;
+namespace Extensaur.Performance;
 
 internal class Program
 {

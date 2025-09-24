@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
-namespace LoreSoft.Extensions.Text;
+namespace Extensaur.Text;
 
 /// <summary>
 /// Named string formatter.

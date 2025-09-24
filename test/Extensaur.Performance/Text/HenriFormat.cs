@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LoreSoft.Extensions.Performance.Text;
+namespace Extensaur.Performance.Text;
 
 public static class HenriFormat
 {

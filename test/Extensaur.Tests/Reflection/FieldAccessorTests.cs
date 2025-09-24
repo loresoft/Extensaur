@@ -5,7 +5,7 @@ using System.Reflection;
 
 using AwesomeAssertions;
 
-namespace LoreSoft.Extensions.Tests.Reflection;
+namespace Extensaur.Tests.Reflection;
 
 public class FieldAccessorTests
 {
@@ -18,30 +18,30 @@ public class FieldAccessorTests
         public DateTime DateTimeField = new(2023, 1, 1);
         public string? NullableStringField = null;
         public int? NullableIntField = null;
-        
+
         public readonly string ReadonlyField = "ReadonlyValue";
         public const string ConstField = "ConstValue";
-        
+
         public static string StaticField = "StaticFieldValue";
         public static readonly string StaticReadonlyField = "StaticReadonlyValue";
-        
+
         private string PrivateField = "PrivateValue";
-        
+
         [Column("custom_column_name")]
         public string ColumnAttributeField = "ColumnValue";
-        
+
         [Key]
         public int KeyField = 1;
-        
+
         [NotMapped]
         public string NotMappedField = "NotMappedValue";
-        
+
         [ConcurrencyCheck]
         public string ConcurrencyField = "ConcurrencyValue";
-        
+
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int DatabaseGeneratedField = 0;
-        
+
         [ForeignKey("RelatedEntity")]
         public int ForeignKeyField = 1;
     }
@@ -698,7 +698,7 @@ public class FieldAccessorTests
 
         // We can't easily mock HasGetter to be false, so we test a different scenario
         // where the getter creation might fail (which shouldn't happen with normal fields)
-        
+
         // This test verifies the error handling exists in the code
         var result = accessor.GetValue(instance);
         result.Should().NotBeNull();

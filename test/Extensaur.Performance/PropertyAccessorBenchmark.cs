@@ -4,9 +4,9 @@ using System.Reflection;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 
-using LoreSoft.Extensions.Performance.Models;
+using Extensaur.Performance.Models;
 
-namespace LoreSoft.Extensions.Performance;
+namespace Extensaur.Performance;
 
 
 [BenchmarkCategory("Accessor")]

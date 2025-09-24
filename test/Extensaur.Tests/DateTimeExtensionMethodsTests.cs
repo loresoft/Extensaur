@@ -1,6 +1,6 @@
 #nullable enable
 
-namespace LoreSoft.Extensions.Tests;
+namespace Extensaur.Tests;
 
 public class DateTimeExtensionMethodsTests
 {

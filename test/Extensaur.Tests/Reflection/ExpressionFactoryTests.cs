@@ -3,7 +3,7 @@ using System.Reflection;
 
 using AwesomeAssertions;
 
-namespace LoreSoft.Extensions.Tests.Reflection;
+namespace Extensaur.Tests.Reflection;
 
 public class ExpressionFactoryTests
 {

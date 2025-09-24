@@ -4,11 +4,11 @@ using System.Reflection;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 
-using LoreSoft.Extensions.Performance.Models;
-using LoreSoft.Extensions.Performance.Text;
-using LoreSoft.Extensions.Text;
+using Extensaur.Performance.Models;
+using Extensaur.Performance.Text;
+using Extensaur.Text;
 
-namespace LoreSoft.Extensions.Performance;
+namespace Extensaur.Performance;
 
 [BenchmarkCategory("Format")]
 public class FormatPerformance

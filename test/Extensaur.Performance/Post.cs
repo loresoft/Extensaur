@@ -1,5 +1,5 @@
 using System;
 
-namespace LoreSoft.Extensions.Performance;
+namespace Extensaur.Performance;
 
 public record Post(string Author, DateTime Updated, string Title);

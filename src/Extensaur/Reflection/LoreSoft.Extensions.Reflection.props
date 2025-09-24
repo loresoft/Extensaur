@@ -1,7 +1,7 @@
 <Project>
   <ItemGroup>
     <Compile Update="@(Compile)">
-      <Visible Condition="'%(NuGetItemType)' == 'Compile' and   '%(NuGetPackageId)' == 'LoreSoft.Extensions.Reflection'">false</Visible>
+      <Visible Condition="'%(NuGetItemType)' == 'Compile' and   '%(NuGetPackageId)' == 'Extensaur.Reflection'">false</Visible>
     </Compile>
   </ItemGroup>
 </Project>

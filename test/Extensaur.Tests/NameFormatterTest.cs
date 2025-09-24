@@ -1,6 +1,6 @@
-using LoreSoft.Extensions.Text;
+using Extensaur.Text;
 
-namespace LoreSoft.Extensions.Tests;
+namespace Extensaur.Tests;
 
 
 public class NameFormatterTest

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
-namespace LoreSoft.Extensions.Performance.Text;
+namespace Extensaur.Performance.Text;
 
 public static class MarisicFormat
 {

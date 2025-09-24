@@ -1,2 +1,2 @@
-# LoreSoft.Extensions
+# Extensaur
 Common Extensions Methods

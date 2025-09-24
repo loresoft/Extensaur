@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LoreSoft.Extensions\LoreSoft.Extensions.csproj" />
+    <ProjectReference Include="..\..\src\Extensaur\Extensaur.csproj" />
   </ItemGroup>
 
   <ItemGroup>
