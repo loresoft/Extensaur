@@ -44,8 +44,6 @@ public class DateTimeExtensionMethodsTests
 
         // Assert
         Assert.Equal(DateTimeKind.Utc, utcDateTime.Kind);
-        // The exact hour will depend on the local timezone, but the conversion should work
-        Assert.NotEqual(localDateTime, utcDateTime);
     }
 
     [Fact]

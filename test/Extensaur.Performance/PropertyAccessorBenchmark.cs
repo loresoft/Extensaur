@@ -2,9 +2,6 @@ using System;
 using System.Reflection;
 
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Jobs;
-
-using Extensaur.Performance.Models;
 
 namespace Extensaur.Performance;
 
