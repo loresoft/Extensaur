@@ -1,0 +1,535 @@
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+
+#nullable enable
+
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+
+namespace System;
+
+/// <summary>
+/// Provides extension methods for safely converting string values to various .NET data types.
+/// These methods return null for nullable types when conversion fails, instead of throwing exceptions.
+/// </summary>
+[ExcludeFromCodeCoverage]
+#if PUBLIC_EXTENSIONS
+public
+#endif
+static class ConvertExtensions
+{
+    /// <summary>
+    /// Converts the specified string representation of a logical value to its Boolean equivalent.
+    /// Supports extended boolean representations including "t", "y", "yes", "1", "x", and "on" as true values.
+    /// </summary>
+    /// <param name="value">A string that contains a boolean value. Supports standard boolean strings as well as extended representations.</param>
+    /// <returns>
+    /// <c>true</c> if <paramref name="value"/> represents a true value (case-insensitive);
+    /// <c>false</c> if <paramref name="value"/> represents a false value or is null.
+    /// </returns>
+    public static bool ToBoolean(this string? value)
+    {
+        if (value == null)
+            return false;
+
+        if (bool.TryParse(value, out var result))
+            return result;
+
+        string v = value.Trim();
+
+        if (string.Equals(v, "t", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(v, "true", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(v, "y", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(v, "yes", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(v, "1", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(v, "x", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(v, "on", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Converts the specified string representation of a number to an equivalent 8-bit unsigned integer.
+    /// </summary>
+    /// <param name="value">A string that contains the number to convert.</param>
+    /// <param name="provider">An object that supplies culture-specific formatting information. If null, the current culture is used.</param>
+    /// <returns>
+    /// An 8-bit unsigned integer that is equivalent to <paramref name="value"/>, or null if the conversion fails.
+    /// </returns>
+    public static byte? ToByte(this string? value, IFormatProvider? provider = null)
+    {
+        if (value == null)
+            return null;
+
+        if (byte.TryParse(value, NumberStyles.Integer, provider, out var result))
+            return result;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Converts the specified string representation to an equivalent <see cref="DateTime"/> value.
+    /// Attempts multiple parsing strategies including standard parsing and specific date formats.
+    /// </summary>
+    /// <param name="value">A string that contains a date and time to convert.</param>
+    /// <param name="provider">An object that supplies culture-specific formatting information. If null, the current culture is used.</param>
+    /// <returns>
+    /// The <see cref="DateTime"/> equivalent of <paramref name="value"/>, or null if the conversion fails.
+    /// </returns>
+    public static DateTime? ToDateTime(this string? value, IFormatProvider? provider = null)
+    {
+        if (value == null)
+            return null;
+
+        if (DateTime.TryParse(value, out var result))
+            return result;
+
+        if (DateTime.TryParseExact(value, "M/d/yyyy hh:mm:ss tt", provider, DateTimeStyles.None, out result))
+            return result;
+
+        if (DateTime.TryParseExact(value, "M/d/yyyy", provider, DateTimeStyles.None, out result))
+            return result;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Converts the specified string representation to an equivalent <see cref="DateTimeOffset"/> value.
+    /// Attempts multiple parsing strategies including standard parsing and specific date formats.
+    /// </summary>
+    /// <param name="value">A string that contains a date and time with offset information to convert.</param>
+    /// <param name="provider">An object that supplies culture-specific formatting information. If null, the current culture is used.</param>
+    /// <returns>
+    /// The <see cref="DateTimeOffset"/> equivalent of <paramref name="value"/>, or null if the conversion fails.
+    /// </returns>
+    public static DateTimeOffset? ToDateTimeOffset(this string? value, IFormatProvider? provider = null)
+    {
+        if (value == null)
+            return null;
+
+        if (DateTimeOffset.TryParse(value, out var result))
+            return result;
+
+        if (DateTimeOffset.TryParseExact(value, "M/d/yyyy hh:mm:ss tt", provider, DateTimeStyles.None, out result))
+            return result;
+
+        if (DateTimeOffset.TryParseExact(value, "M/d/yyyy", provider, DateTimeStyles.None, out result))
+            return result;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Converts the specified string representation of a number to an equivalent decimal number.
+    /// Uses currency number styles for parsing to handle various decimal formats.
+    /// </summary>
+    /// <param name="value">A string that contains a decimal number to convert.</param>
+    /// <param name="provider">An object that supplies culture-specific formatting information. If null, the current culture is used.</param>
+    /// <returns>
+    /// A <see cref="decimal"/> number that is equivalent to <paramref name="value"/>, or null if the conversion fails.
+    /// </returns>
+    public static decimal? ToDecimal(this string? value, IFormatProvider? provider = null)
+    {
+        if (value == null)
+            return null;
+
+        if (decimal.TryParse(value, NumberStyles.Currency, provider, out var result))
+            return result;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Converts the specified string representation of a number to an equivalent double-precision floating-point number.
+    /// </summary>
+    /// <param name="value">A string that contains the number to convert.</param>
+    /// <param name="provider">An object that supplies culture-specific formatting information. If null, the current culture is used.</param>
+    /// <returns>
+    /// A double-precision floating-point number that is equivalent to <paramref name="value"/>, or null if the conversion fails.
+    /// </returns>
+    public static double? ToDouble(this string? value, IFormatProvider? provider = null)
+    {
+        if (value == null)
+            return null;
+
+        if (double.TryParse(value, NumberStyles.Float | NumberStyles.AllowThousands, provider, out var result))
+            return result;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Converts the specified string representation of a number to an equivalent 16-bit signed integer.
+    /// </summary>
+    /// <param name="value">A string that contains the number to convert.</param>
+    /// <param name="provider">An object that supplies culture-specific formatting information. If null, the current culture is used.</param>
+    /// <returns>
+    /// A 16-bit signed integer that is equivalent to <paramref name="value"/>, or null if the conversion fails.
+    /// </returns>
+    public static short? ToInt16(this string? value, IFormatProvider? provider = null)
+    {
+        if (value == null)
+            return null;
+
+        if (short.TryParse(value, NumberStyles.Integer, provider, out var result))
+            return result;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Converts the specified string representation of a number to an equivalent 32-bit signed integer.
+    /// </summary>
+    /// <param name="value">A string that contains the number to convert.</param>
+    /// <param name="provider">An object that supplies culture-specific formatting information. If null, the current culture is used.</param>
+    /// <returns>
+    /// A 32-bit signed integer that is equivalent to <paramref name="value"/>, or null if the conversion fails.
+    /// </returns>
+    public static int? ToInt32(this string? value, IFormatProvider? provider = null)
+    {
+        if (value == null)
+            return null;
+
+        if (int.TryParse(value, NumberStyles.Integer, provider, out var result))
+            return result;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Converts the specified string representation of a number to an equivalent 64-bit signed integer.
+    /// </summary>
+    /// <param name="value">A string that contains the number to convert.</param>
+    /// <param name="provider">An object that supplies culture-specific formatting information. If null, the current culture is used.</param>
+    /// <returns>
+    /// A 64-bit signed integer that is equivalent to <paramref name="value"/>, or null if the conversion fails.
+    /// </returns>
+    public static long? ToInt64(this string? value, IFormatProvider? provider = null)
+    {
+        if (value == null)
+            return null;
+
+        if (long.TryParse(value, NumberStyles.Integer, provider, out var result))
+            return result;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Converts the specified string representation of a number to an equivalent single-precision floating-point number.
+    /// </summary>
+    /// <param name="value">A string that contains the number to convert.</param>
+    /// <param name="provider">An object that supplies culture-specific formatting information. If null, the current culture is used.</param>
+    /// <returns>
+    /// A single-precision floating-point number that is equivalent to <paramref name="value"/>, or null if the conversion fails.
+    /// </returns>
+    public static float? ToSingle(this string? value, IFormatProvider? provider = null)
+    {
+        if (value == null)
+            return null;
+
+        if (float.TryParse(value, NumberStyles.Float | NumberStyles.AllowThousands, provider, out var result))
+            return result;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Converts the specified string representation of a number to an equivalent 16-bit unsigned integer.
+    /// </summary>
+    /// <param name="value">A string that contains the number to convert.</param>
+    /// <param name="provider">An object that supplies culture-specific formatting information. If null, the current culture is used.</param>
+    /// <returns>
+    /// A 16-bit unsigned integer that is equivalent to <paramref name="value"/>, or null if the conversion fails.
+    /// </returns>
+    public static ushort? ToUInt16(this string? value, IFormatProvider? provider = null)
+    {
+        if (value == null)
+            return null;
+
+        if (ushort.TryParse(value, NumberStyles.Integer, provider, out var result))
+            return result;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Converts the specified string representation of a number to an equivalent 32-bit unsigned integer.
+    /// </summary>
+    /// <param name="value">A string that contains the number to convert.</param>
+    /// <param name="provider">An object that supplies culture-specific formatting information. If null, the current culture is used.</param>
+    /// <returns>
+    /// A 32-bit unsigned integer that is equivalent to <paramref name="value"/>, or null if the conversion fails.
+    /// </returns>
+    public static uint? ToUInt32(this string? value, IFormatProvider? provider = null)
+    {
+        if (value == null)
+            return null;
+
+        if (uint.TryParse(value, NumberStyles.Integer, provider, out var result))
+            return result;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Converts the specified string representation of a number to an equivalent 64-bit unsigned integer.
+    /// </summary>
+    /// <param name="value">A string that contains the number to convert.</param>
+    /// <param name="provider">An object that supplies culture-specific formatting information. If null, the current culture is used.</param>
+    /// <returns>
+    /// A 64-bit unsigned integer that is equivalent to <paramref name="value"/>, or null if the conversion fails.
+    /// </returns>
+    public static ulong? ToUInt64(this string? value, IFormatProvider? provider = null)
+    {
+        if (value == null)
+            return null;
+
+        if (ulong.TryParse(value, NumberStyles.Integer, provider, out var result))
+            return result;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Converts the specified string to an equivalent <see cref="TimeSpan"/> value.
+    /// </summary>
+    /// <param name="value">A string that represents a time interval.</param>
+    /// <returns>
+    /// A <see cref="TimeSpan"/> that corresponds to <paramref name="value"/>, or null if the conversion fails.
+    /// </returns>
+    public static TimeSpan? ToTimeSpan(this string? value)
+    {
+        if (value == null)
+            return null;
+
+        if (TimeSpan.TryParse(value, out var result))
+            return result;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Converts the specified string to an equivalent <see cref="Guid"/> value.
+    /// </summary>
+    /// <param name="value">A string that contains a GUID in a recognized format.</param>
+    /// <returns>
+    /// A <see cref="Guid"/> that corresponds to <paramref name="value"/>, or null if the conversion fails.
+    /// </returns>
+    public static Guid? ToGuid(this string? value)
+    {
+        if (value == null)
+            return null;
+
+        if (Guid.TryParse(value, out var result))
+            return result;
+
+        return null;
+    }
+
+#if NET6_0_OR_GREATER
+    /// <summary>
+    /// Converts the specified string to an equivalent <see cref="DateOnly"/> value.
+    /// Attempts multiple parsing strategies including direct parsing and conversion from <see cref="DateTime"/> and <see cref="DateTimeOffset"/>.
+    /// </summary>
+    /// <param name="value">A string that represents a date without time information.</param>
+    /// <returns>
+    /// A <see cref="DateOnly"/> that corresponds to <paramref name="value"/>, or null if the conversion fails.
+    /// </returns>
+    public static DateOnly? ToDateOnly(this string? value)
+    {
+        if (value == null)
+            return null;
+
+        if (DateOnly.TryParse(value, out var dateOnly))
+            return dateOnly;
+
+        if (DateTime.TryParse(value, out var dateTime))
+            return DateOnly.FromDateTime(dateTime);
+
+        if (DateTimeOffset.TryParse(value, out var dateTimeOffset))
+            return DateOnly.FromDateTime(dateTimeOffset.DateTime);
+
+        return null;
+    }
+
+    /// <summary>
+    /// Converts the specified string to an equivalent <see cref="TimeOnly"/> value.
+    /// Attempts multiple parsing strategies including direct parsing and conversion from <see cref="TimeSpan"/>, <see cref="DateTime"/>, and <see cref="DateTimeOffset"/>.
+    /// </summary>
+    /// <param name="value">A string that represents a time without date information.</param>
+    /// <returns>
+    /// A <see cref="TimeOnly"/> that corresponds to <paramref name="value"/>, or null if the conversion fails.
+    /// </returns>
+    public static TimeOnly? ToTimeOnly(this string? value)
+    {
+        if (value == null)
+            return null;
+
+        if (TimeOnly.TryParse(value, out var timeOnly))
+            return timeOnly;
+
+        if (TimeSpan.TryParse(value, out var timeSpan))
+            return TimeOnly.FromTimeSpan(timeSpan);
+
+        if (DateTime.TryParse(value, out var dateTime))
+            return TimeOnly.FromDateTime(dateTime);
+
+        if (DateTimeOffset.TryParse(value, out var dateTimeOffset))
+            return TimeOnly.FromDateTime(dateTimeOffset.DateTime);
+
+        return null;
+    }
+#endif
+
+    /// <summary>
+    /// Safely converts a string input to the specified type using the appropriate conversion method.
+    /// Returns appropriate default values for non-nullable types when conversion fails.
+    /// </summary>
+    /// <param name="type">The target type to convert to.</param>
+    /// <param name="input">The string value to convert.</param>
+    /// <returns>
+    /// The converted value of the specified type, or null for nullable types when conversion fails,
+    /// or the default value for non-nullable types when conversion fails.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="type"/> is null.</exception>
+    public static object? SafeConvert(Type type, string? input)
+    {
+        if (type is null)
+            throw new ArgumentNullException(nameof(type));
+
+        // first try string
+        if (type == typeof(string))
+        {
+            return input;
+        }
+
+        var isNullable = type.IsNullable();
+        if ((input?.IsNullOrEmpty() != false) && isNullable)
+        {
+            return null;
+        }
+
+        input = input?.Trim();
+        var underlyingType = type.GetUnderlyingType();
+
+        // convert by type
+        if (underlyingType == typeof(bool))
+        {
+            return input.ToBoolean();
+        }
+        if (underlyingType == typeof(byte))
+        {
+            var value = input.ToByte();
+            return value.HasValue ? value.Value : isNullable ? null : 0;
+        }
+        if (underlyingType == typeof(DateTime))
+        {
+            var value = input.ToDateTime();
+            return value.HasValue ? value.Value : isNullable ? null : DateTime.MinValue;
+        }
+        if (underlyingType == typeof(DateTimeOffset))
+        {
+            var value = input.ToDateTimeOffset();
+            return value.HasValue ? value.Value : isNullable ? null : DateTimeOffset.MinValue;
+        }
+        if (underlyingType == typeof(decimal))
+        {
+            var value = input.ToDecimal();
+            return value.HasValue ? value.Value : isNullable ? null : 0;
+        }
+        if (underlyingType == typeof(double))
+        {
+            var value = input.ToDouble();
+            return value.HasValue ? value.Value : isNullable ? null : 0;
+        }
+        if (underlyingType == typeof(short))
+        {
+            var value = input.ToInt16();
+            return value.HasValue ? value.Value : isNullable ? null : 0;
+        }
+        if (underlyingType == typeof(int))
+        {
+            var value = input.ToInt32();
+            return value.HasValue ? value.Value : isNullable ? null : 0;
+        }
+        if (underlyingType == typeof(long))
+        {
+            var value = input.ToInt64();
+            return value.HasValue ? value.Value : isNullable ? null : 0;
+        }
+        if (underlyingType == typeof(float))
+        {
+            var value = input.ToSingle();
+            return value.HasValue ? value.Value : isNullable ? null : 0;
+        }
+        if (underlyingType == typeof(ushort))
+        {
+            var value = input.ToUInt16();
+            return value.HasValue ? value.Value : isNullable ? null : 0;
+        }
+        if (underlyingType == typeof(uint))
+        {
+            var value = input.ToUInt32();
+            return value.HasValue ? value.Value : isNullable ? null : 0;
+        }
+        if (underlyingType == typeof(ulong))
+        {
+            var value = input.ToUInt64();
+            return value.HasValue ? value.Value : isNullable ? null : 0;
+        }
+        if (underlyingType == typeof(TimeSpan))
+        {
+            var value = input.ToTimeSpan();
+            return value.HasValue ? value.Value : isNullable ? null : TimeSpan.Zero;
+        }
+        if (underlyingType == typeof(Guid))
+        {
+            var value = input.ToGuid();
+            return value.HasValue ? value.Value : isNullable ? null : Guid.Empty;
+        }
+#if NET6_0_OR_GREATER
+        if (underlyingType == typeof(DateOnly))
+        {
+            var value = input.ToDateOnly();
+            return value.HasValue ? value.Value : isNullable ? null : DateOnly.MinValue;
+        }
+        if (underlyingType == typeof(TimeOnly))
+        {
+            var value = input.ToTimeOnly();
+            return value.HasValue ? value.Value : isNullable ? null : TimeOnly.MinValue;
+        }
+#endif
+        return default;
+    }
+
+    /// <summary>
+    /// Converts an object value to the specified generic type using safe conversion methods.
+    /// Handles null values, <see cref="DBNull"/> values, direct type matches, and string conversions.
+    /// </summary>
+    /// <typeparam name="TValue">The target type to convert to.</typeparam>
+    /// <param name="result">The object value to convert.</param>
+    /// <param name="convert">An optional custom conversion function to use when standard conversion methods are not sufficient.</param>
+    /// <returns>
+    /// The converted value of type <typeparamref name="TValue"/>, or the default value of <typeparamref name="TValue"/> if conversion fails or the input is null.
+    /// </returns>
+    /// <exception cref="InvalidCastException">Thrown when the conversion cannot be performed using standard methods and no custom converter is provided.</exception>
+    public static TValue? ConvertValue<TValue>(object? result, Func<object?, TValue>? convert = null)
+    {
+        if (result is null || result == DBNull.Value)
+            return default;
+
+        if (result is TValue valueType)
+            return valueType;
+
+        if (convert != null)
+            return convert(result);
+
+        if (result is string stringValue)
+            return (TValue?)SafeConvert(typeof(TValue), stringValue);
+
+        return (TValue)Convert.ChangeType(result, typeof(TValue));
+    }
+}

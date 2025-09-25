@@ -1,6 +1,9 @@
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+
 #nullable enable
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 namespace System.Reflection;
@@ -9,6 +12,7 @@ namespace System.Reflection;
 /// Provides factory methods for creating compiled expressions that wrap reflection operations
 /// for improved performance compared to direct reflection calls.
 /// </summary>
+[ExcludeFromCodeCoverage]
 internal static class ExpressionFactory
 {
     /// <summary>

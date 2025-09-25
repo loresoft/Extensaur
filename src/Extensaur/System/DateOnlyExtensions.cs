@@ -1,24 +1,38 @@
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+
 #nullable enable
+
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
 namespace System;
 
 #if NET6_0_OR_GREATER
 /// <summary>
-///   <see cref="DateOnly" /> extension methods
+/// Provides extension methods for <see cref="DateOnly"/> to enhance date manipulation and conversion operations.
 /// </summary>
-public static partial class DateOnlyExtensions
+[ExcludeFromCodeCoverage]
+#if PUBLIC_EXTENSIONS
+public
+#endif
+static class DateOnlyExtensions
 {
     /// <summary>
-    /// Converts the <see cref="DateOnly"/> to a <see cref="DateTimeOffset"/> in the specified timezone.
+    /// Converts the <see cref="DateOnly"/> to a <see cref="DateTimeOffset"/> using the specified time and timezone.
     /// </summary>
     /// <param name="dateOnly">The date to convert.</param>
-    /// <param name="zone">The time zone the date is in.</param>
-    /// <returns>The converted <see cref="DateTimeOffset"/></returns>
-    public static DateTimeOffset ToDateTimeOffset(this DateOnly dateOnly, TimeZoneInfo? zone = null)
+    /// <param name="time">The time component to use for the conversion. If null, <see cref="TimeOnly.MinValue"/> (midnight) is used.</param>
+    /// <param name="zone">The time zone to use for the conversion. If null, the local time zone is used.</param>
+    /// <returns>A <see cref="DateTimeOffset"/> representing the specified date and time in the given timezone.</returns>
+    public static DateTimeOffset ToDateTimeOffset(
+        this DateOnly dateOnly,
+        TimeOnly? time = null,
+        TimeZoneInfo? zone = null)
     {
         zone ??= TimeZoneInfo.Local;
+        time ??= TimeOnly.MinValue;
 
-        var dateTime = dateOnly.ToDateTime(TimeOnly.MinValue);
+        var dateTime = dateOnly.ToDateTime(time.Value);
         var offset = zone.GetUtcOffset(dateTime);
 
         return new DateTimeOffset(dateTime, offset);
@@ -26,16 +40,37 @@ public static partial class DateOnlyExtensions
 
     /// <summary>
     /// Converts the <see cref="DateTimeOffset"/> to a <see cref="DateOnly"/> in the specified timezone.
+    /// The time component is discarded, keeping only the date portion.
     /// </summary>
     /// <param name="dateTime">The <see cref="DateTimeOffset"/> to convert.</param>
-    /// <param name="zone">The time zone the date is in.</param>
-    /// <returns>The converted <see cref="DateOnly"/></returns>
-    public static DateOnly ToDateOnly(this DateTimeOffset dateTime, TimeZoneInfo? zone = null)
+    /// <param name="zone">The time zone to convert to before extracting the date. If null, the local time zone is used.</param>
+    /// <returns>A <see cref="DateOnly"/> representing the date portion of the converted <see cref="DateTimeOffset"/>.</returns>
+    public static DateOnly ToDateOnly(
+        this DateTimeOffset dateTime,
+        TimeZoneInfo? zone = null)
     {
         zone ??= TimeZoneInfo.Local;
 
         var targetZone = TimeZoneInfo.ConvertTime(dateTime, zone);
         return DateOnly.FromDateTime(targetZone.Date);
+    }
+
+    /// <summary>
+    /// Gets the week number of the year for the specified date according to the given calendar rules.
+    /// </summary>
+    /// <param name="date">The date to get the week number for.</param>
+    /// <param name="firstDayOfWeek">The first day of the week. Defaults to <see cref="DayOfWeek.Sunday"/>.</param>
+    /// <param name="weekRule">The calendar week rule that defines the first week of the year. Defaults to <see cref="CalendarWeekRule.FirstFourDayWeek"/>.</param>
+    /// <returns>An integer representing the week number of the year (1-based).</returns>
+    public static int WeekNumber(
+        this DateOnly date,
+        DayOfWeek firstDayOfWeek = DayOfWeek.Sunday,
+        CalendarWeekRule weekRule = CalendarWeekRule.FirstFourDayWeek)
+    {
+        var dateTime = date.ToDateTime(TimeOnly.MinValue);
+        Calendar calendar = CultureInfo.InvariantCulture.Calendar;
+
+        return calendar.GetWeekOfYear(dateTime, weekRule, firstDayOfWeek);
     }
 }
 #endif

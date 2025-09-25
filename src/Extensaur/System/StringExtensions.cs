@@ -1,16 +1,21 @@
-using System.Buffers;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 
 #nullable enable
+
+using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace System;
 
 /// <summary>
 /// Extension methods for <see cref="string"/> to provide additional string manipulation and formatting utilities.
 /// </summary>
-public static partial class StringExtensions
+[ExcludeFromCodeCoverage]
+#if PUBLIC_EXTENSIONS
+public
+#endif
+ static class StringExtensions
 {
     /// <summary>
     /// Determines whether the specified string is <c>null</c> or an empty string ("").

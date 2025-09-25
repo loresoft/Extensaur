@@ -1,21 +1,30 @@
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 
 #nullable enable
+
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace System.Text;
 
 /// <summary>
-/// Extension methods for <see cref="StringBuilder"/>.
+/// Provides extension methods for <see cref="StringBuilder"/> to enhance string building operations with conditional appending and formatting capabilities.
 /// </summary>
-public static partial class StringBuilderExtensions
+[ExcludeFromCodeCoverage]
+#if PUBLIC_EXTENSIONS
+public
+#endif
+static class StringBuilderExtensions
 {
     /// <summary>
-    /// Appends a copy of the specified string followed by the default line terminator to the end of the StringBuilder object.
+    /// Appends a formatted string followed by the default line terminator to the end of the <see cref="StringBuilder"/> object.
     /// </summary>
-    /// <param name="builder">The StringBuilder instance to append to.</param>
-    /// <param name="format">A composite format string.</param>
-    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <param name="builder">The <see cref="StringBuilder"/> instance to append to.</param>
+    /// <param name="format">A composite format string containing formatting specifications.</param>
+    /// <param name="args">An array of objects to format and append.</param>
+    /// <returns>A reference to the <see cref="StringBuilder"/> instance after the append operation has completed.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
+    /// <exception cref="FormatException">Thrown when the format string is invalid or the arguments don't match the format specifications.</exception>
     public static StringBuilder AppendLine(this StringBuilder builder, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string format, params object[] args)
     {
         builder.AppendFormat(format, args);
@@ -24,11 +33,13 @@ public static partial class StringBuilderExtensions
     }
 
     /// <summary>
-    /// Appends a copy of the specified string if <paramref name="condition"/> is met.
+    /// Conditionally appends a copy of the specified string to the <see cref="StringBuilder"/> based on the provided condition.
     /// </summary>
-    /// <param name="builder">The StringBuilder instance to append to.</param>
-    /// <param name="text">The string to append.</param>
-    /// <param name="condition">The condition delegate to evaluate. If condition is null, String.IsNullOrWhiteSpace method will be used.</param>
+    /// <param name="builder">The <see cref="StringBuilder"/> instance to append to.</param>
+    /// <param name="text">The string to append if the condition is met.</param>
+    /// <param name="condition">The condition delegate to evaluate. If null, defaults to checking if the text is not null or whitespace.</param>
+    /// <returns>A reference to the <see cref="StringBuilder"/> instance after the conditional append operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
     public static StringBuilder AppendIf(this StringBuilder builder, string? text, Func<string?, bool>? condition = null)
     {
         var c = condition ?? (s => !string.IsNullOrWhiteSpace(s));
@@ -40,11 +51,13 @@ public static partial class StringBuilderExtensions
     }
 
     /// <summary>
-    /// Appends a copy of the specified string if <paramref name="condition"/> is met.
+    /// Conditionally appends a copy of the specified string to the <see cref="StringBuilder"/> based on the provided boolean condition.
     /// </summary>
-    /// <param name="builder">The StringBuilder instance to append to.</param>
-    /// <param name="text">The string to append.</param>
-    /// <param name="condition">The condition.</param>
+    /// <param name="builder">The <see cref="StringBuilder"/> instance to append to.</param>
+    /// <param name="text">The string to append if the condition is true.</param>
+    /// <param name="condition">The boolean condition that determines whether to append the text.</param>
+    /// <returns>A reference to the <see cref="StringBuilder"/> instance after the conditional append operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
     public static StringBuilder AppendIf(this StringBuilder builder, string? text, bool condition)
     {
         if (condition)
@@ -54,11 +67,13 @@ public static partial class StringBuilderExtensions
     }
 
     /// <summary>
-    /// Appends a copy of the specified string followed by the default line terminator if <paramref name="condition"/> is met.
+    /// Conditionally appends a copy of the specified string followed by the default line terminator to the <see cref="StringBuilder"/> based on the provided condition.
     /// </summary>
-    /// <param name="builder">The StringBuilder instance to append to.</param>
-    /// <param name="text">The string to append.</param>
-    /// <param name="condition">The condition delegate to evaluate. If condition is null, String.IsNullOrWhiteSpace method will be used.</param>
+    /// <param name="builder">The <see cref="StringBuilder"/> instance to append to.</param>
+    /// <param name="text">The string to append if the condition is met.</param>
+    /// <param name="condition">The condition delegate to evaluate. If null, defaults to checking if the text is not null or whitespace.</param>
+    /// <returns>A reference to the <see cref="StringBuilder"/> instance after the conditional append operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
     public static StringBuilder AppendLineIf(this StringBuilder builder, string? text, Func<string?, bool>? condition = null)
     {
         var c = condition ?? (s => !string.IsNullOrWhiteSpace(s));
@@ -70,11 +85,13 @@ public static partial class StringBuilderExtensions
     }
 
     /// <summary>
-    /// Appends a copy of the specified string followed by the default line terminator if <paramref name="condition"/> is met.
+    /// Conditionally appends a copy of the specified string followed by the default line terminator to the <see cref="StringBuilder"/> based on the provided boolean condition.
     /// </summary>
-    /// <param name="builder">The StringBuilder instance to append to.</param>
-    /// <param name="text">The string to append.</param>
-    /// <param name="condition">The condition.</param>
+    /// <param name="builder">The <see cref="StringBuilder"/> instance to append to.</param>
+    /// <param name="text">The string to append if the condition is true.</param>
+    /// <param name="condition">The boolean condition that determines whether to append the text with a line terminator.</param>
+    /// <returns>A reference to the <see cref="StringBuilder"/> instance after the conditional append operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
     public static StringBuilder AppendLineIf(this StringBuilder builder, string? text, bool condition)
     {
         if (condition)
@@ -84,13 +101,14 @@ public static partial class StringBuilderExtensions
     }
 
     /// <summary>
-    /// Concatenates and appends the members of a collection, using the specified separator between each member.
+    /// Concatenates and appends the string representations of the elements in a collection, using the specified separator between each element.
     /// </summary>
-    /// <typeparam name="T">The type of the members of values.</typeparam>
-    /// <param name="builder">A reference to this instance after the append operation has completed.</param>
-    /// <param name="separator">The string to use as a separator. separator is included in the concatenated and appended strings only if values has more than one element.</param>
-    /// <param name="values">A collection that contains the objects to concatenate and append to the current instance of the string builder.</param>
-    /// <returns>A reference to this instance after the append operation has completed.</returns>
+    /// <typeparam name="T">The type of the elements in the collection.</typeparam>
+    /// <param name="builder">The <see cref="StringBuilder"/> instance to append to.</param>
+    /// <param name="separator">The string to use as a separator between elements. If null, an empty string is used.</param>
+    /// <param name="values">The collection containing the elements to concatenate and append.</param>
+    /// <returns>A reference to the <see cref="StringBuilder"/> instance after the append operation has completed.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="values"/> is null.</exception>
     public static StringBuilder AppendJoin<T>(this StringBuilder builder, string? separator, IEnumerable<T?> values)
     {
         if (builder is null)

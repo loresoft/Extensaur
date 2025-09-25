@@ -1,8 +1,11 @@
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+
 #nullable enable
 
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace System.Reflection;
 
@@ -14,8 +17,12 @@ namespace System.Reflection;
 /// Data Annotations attributes for database mapping scenarios. Derived classes must implement the specific
 /// member access logic for properties, fields, or other member types.
 /// </remarks>
-[DebuggerDisplay("Name: {Name}")]
-public abstract class MemberAccessor : IMemberAccessor, IEquatable<IMemberAccessor?>
+[ExcludeFromCodeCoverage]
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
+#if PUBLIC_EXTENSIONS
+public
+#endif
+abstract class MemberAccessor : IMemberAccessor, IEquatable<IMemberAccessor?>
 {
     /// <summary>
     /// Lazy-loaded <see cref="ColumnAttribute"/> for database column mapping information.
@@ -276,4 +283,9 @@ public abstract class MemberAccessor : IMemberAccessor, IEquatable<IMemberAccess
     {
         return MemberInfo.GetHashCode();
     }
+
+    /// <summary>
+    /// Gets a string representation of the <see cref="MemberAccessor"/> for debugging purposes.
+    /// </summary>
+    private string DebuggerDisplay => $"Name: {Name}";
 }

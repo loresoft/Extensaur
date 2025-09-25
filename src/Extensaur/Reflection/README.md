@@ -1,8 +1,8 @@
 # Reflection Extensions
 
-Source Package for Reflection - High-performance compiled expression-based reflection utilities for .NET
+Source only package for Reflection - High-performance compiled expression-based reflection utilities for .NET
 
-This package provides a comprehensive set of classes for high-performance reflection operations using compiled expressions instead of traditional reflection calls. The library is optimized for scenarios where reflection operations need to be performed repeatedly, such as ORM scenarios, object mapping, and dynamic property access.
+This package provides a comprehensive set of classes for high-performance reflection operations using compiled expressions instead of traditional reflection calls. The package is optimized for scenarios where reflection operations need to be performed repeatedly, such as ORM scenarios, object mapping, and dynamic property access.
 
 ## Key Features
 
@@ -327,9 +327,35 @@ var email = LateBinder.Get(person, "Email");
 var result = LateBinder.InvokeMethod(person, "CompareTo", otherPerson);
 ```
 
+## Compiler Configuration
+
+### PUBLIC_EXTENSIONS Flag
+
+By default, the classes in this package are marked as `internal` to avoid namespace pollution in consuming projects. If you need direct access to classes from outside the assembly, you can make them `public` by defining the `PUBLIC_EXTENSIONS` compiler constant.
+
+Add the following to your project file (`.csproj`) to make the extension classes public:
+
+```xml
+<PropertyGroup>
+  <DefineConstants>$(DefineConstants);PUBLIC_EXTENSIONS</DefineConstants>
+</PropertyGroup>
+```
+
+**When to use PUBLIC_EXTENSIONS:**
+
+- You need direct access to extension classes from outside the assembly
+- You're building libraries that extend or wrap this functionality
+- You need to expose reflection utilities in your public API
+
+**Default behavior (without PUBLIC_EXTENSIONS):**
+
+- All extension classes remain `internal`
+- Main functionality is still accessible through the public interfaces
+- Cleaner public API surface for most use cases
+
 ## Performance Benefits
 
-This library provides significant performance improvements over traditional reflection:
+This package provides significant performance improvements over traditional reflection:
 
 - **Compiled Expressions**: Method calls are compiled to optimized delegates
 - **Caching**: Type accessors and member accessors are cached for reuse
@@ -338,7 +364,7 @@ This library provides significant performance improvements over traditional refl
 
 ## Thread Safety
 
-All classes in this library are designed to be thread-safe:
+All classes in this package are designed to be thread-safe:
 
 - Static caches use `ConcurrentDictionary` for safe concurrent access
 - Lazy initialization ensures thread-safe single initialization
@@ -346,7 +372,7 @@ All classes in this library are designed to be thread-safe:
 
 ## Integration with ORMs
 
-This library is designed to work well with Object-Relational Mapping scenarios:
+This package is designed to work well with Object-Relational Mapping scenarios:
 
 - Full support for Data Annotations
 - Database column name mapping and resolution  

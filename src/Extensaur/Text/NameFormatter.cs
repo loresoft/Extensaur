@@ -1,34 +1,45 @@
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 
-namespace Extensaur.Text;
+#nullable enable
+
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+
+namespace System.Text;
 
 /// <summary>
-/// Named string formatter.
+/// Provides string formatting functionality using named placeholders that are replaced with object property values.
+/// Supports nested property access, dictionary-based sources, and custom format strings.
 /// </summary>
-public static class NameFormatter
+[ExcludeFromCodeCoverage]
+#if PUBLIC_EXTENSIONS
+public
+#endif
+static class NameFormatter
 {
     /// <summary>
     /// Replaces each named format item in a specified string with the text equivalent of a corresponding object's property value.
+    /// Supports nested property access using dot notation, dictionary sources, and custom format strings using colon syntax.
     /// </summary>
-    /// <param name="format">A composite format string.</param>
-    /// <param name="source">The object to format.</param>
-    /// <returns>A copy of format in which any named format items are replaced by the string representation.</returns>
-    /// <example>
-    /// <code>
-    /// var o = new { First = "John", Last = "Doe" };
-    /// string result = NameFormatter.Format("Full Name: {First} {Last}", o);
-    /// </code>
-    /// </example>
-    public static string FormatName(this string format, object source)
+    /// <param name="format">A composite format string containing named placeholders enclosed in braces (e.g., "{PropertyName}" or "{Property:format}").</param>
+    /// <param name="source">The object containing the properties to use for replacement. Can be an object with properties, or a dictionary.</param>
+    /// <returns>
+    /// A copy of <paramref name="format"/> in which any named format items are replaced by the string representation
+    /// of the corresponding property values from <paramref name="source"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="format"/> is null.</exception>
+    /// <exception cref="FormatException">Thrown when the format string contains unmatched braces or invalid format syntax.</exception>
+    public static string FormatName(this string format, object? source)
     {
         if (format == null)
             throw new ArgumentNullException(nameof(format));
 
         if (format.Length == 0)
             return string.Empty;
+
+        if (source == null)
+            return format;
 
         var result = new StringBuilder(format.Length * 2);
         var expression = new StringBuilder();
@@ -87,12 +98,19 @@ public static class NameFormatter
         return result.ToString();
     }
 
-    private static string Evaluate(object source, string expression)
+    /// <summary>
+    /// Evaluates a named expression against the source object and returns the formatted string representation.
+    /// Handles dictionary sources and object properties, with support for nested property access and custom formatting.
+    /// </summary>
+    /// <param name="source">The source object to evaluate the expression against.</param>
+    /// <param name="expression">The property name or expression to evaluate, optionally with format specifier after a colon.</param>
+    /// <returns>The formatted string representation of the evaluated expression, or an empty string if the expression cannot be resolved.</returns>
+    private static string Evaluate(object? source, string expression)
     {
         if (source is null || string.IsNullOrEmpty(expression))
             return string.Empty;
 
-        string format = null;
+        string? format = null;
 
         // support format string {0:d}
         int colonIndex = expression.IndexOf(':');
@@ -125,12 +143,18 @@ public static class NameFormatter
         }
     }
 
-    private static object GetValue(object target, string name)
+    /// <summary>
+    /// Gets the value of a property from the target object, supporting nested property access using dot notation.
+    /// </summary>
+    /// <param name="target">The object to retrieve the property value from.</param>
+    /// <param name="name">The property name, which can include nested properties separated by dots (e.g., "Address.City").</param>
+    /// <returns>The value of the specified property, or null if the property is not found or is null at any level.</returns>
+    private static object? GetValue(object target, string name)
     {
         var currentType = target.GetType();
-        var currentTarget = target;
+        object? currentTarget = target;
 
-        PropertyInfo property = null;
+        PropertyInfo? property = null;
 
         // optimization if no nested property
         if (!name.Contains('.'))
@@ -146,23 +170,37 @@ public static class NameFormatter
             {
                 // pending property, get value and type
                 currentTarget = property.GetValue(currentTarget);
+                if (currentTarget is null)
+                    return null;
+
                 currentType = property.PropertyType;
             }
 
             property = currentType.GetRuntimeProperty(part);
+            if (property is null)
+                return null;
         }
 
         // return last property
         return property?.GetValue(currentTarget);
     }
 
-    private static string FormatValue<T>(string format, T value)
+    /// <summary>
+    /// Formats a value using the specified format string, handling null values appropriately.
+    /// </summary>
+    /// <typeparam name="T">The type of the value to format.</typeparam>
+    /// <param name="format">The format string to apply, or null/empty for default formatting.</param>
+    /// <param name="value">The value to format.</param>
+    /// <returns>
+    /// The formatted string representation of <paramref name="value"/>, or an empty string if <paramref name="value"/> is null.
+    /// </returns>
+    private static string FormatValue<T>(string? format, T? value)
     {
         if (value == null)
             return string.Empty;
 
         return string.IsNullOrEmpty(format)
-          ? value.ToString()
+          ? value.ToString() ?? string.Empty
           : string.Format("{0:" + format + "}", value);
     }
 }

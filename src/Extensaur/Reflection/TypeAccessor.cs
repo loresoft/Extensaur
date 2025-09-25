@@ -5,6 +5,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -18,7 +20,12 @@ namespace System.Reflection;
 /// and database mapping metadata. It uses lazy initialization and caching to optimize performance for repeated member access operations.
 /// The class supports Entity Framework-style data annotations for ORM scenarios.
 /// </remarks>
-public class TypeAccessor
+[ExcludeFromCodeCoverage]
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
+#if PUBLIC_EXTENSIONS
+public
+#endif
+class TypeAccessor
 {
     private static readonly ConcurrentDictionary<Type, TypeAccessor> _typeCache = new();
     private readonly ConcurrentDictionary<string, IMemberAccessor?> _memberCache = new();
@@ -52,7 +59,7 @@ public class TypeAccessor
     /// <summary>
     /// Gets the name of the Type.
     /// </summary>
-    /// <value>The name of the Type as returned by <see cref="Type.Name"/>.</value>
+    /// <value>The name of the Type as returned by Type.Name.</value>
     public string Name => Type.Name;
 
     /// <summary>
@@ -60,7 +67,7 @@ public class TypeAccessor
     /// </summary>
     /// <value>
     /// The name of the table the class is mapped to. If a <see cref="TableAttribute"/> is present,
-    /// returns <see cref="TableAttribute.Name"/>; otherwise, returns <see cref="Type.Name"/>.
+    /// returns <see cref="TableAttribute.Name"/>; otherwise, returns Type.Name.
     /// </value>
     /// <remarks>
     /// This property is commonly used in ORM scenarios to determine the database table name
@@ -591,4 +598,9 @@ public class TypeAccessor
     {
         return _typeCache.GetOrAdd(type, t => new TypeAccessor(t));
     }
+
+    /// <summary>
+    /// Gets a string representation of the <see cref="TypeAccessor"/> for debugging purposes.
+    /// </summary>
+    private string DebuggerDisplay => $"Name: {Name}";
 }

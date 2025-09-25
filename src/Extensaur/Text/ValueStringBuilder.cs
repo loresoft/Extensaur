@@ -1,18 +1,25 @@
-using System.Buffers;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 
 #nullable enable
 
-namespace System;
+using System.Buffers;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+namespace System.Text;
 
 /// <summary>
 /// A high-performance, stack-friendly string builder that minimizes heap allocations.
 /// Uses a buffer (stack or pooled) to build up a string efficiently.
 /// Dispose must be called to return any rented arrays to the pool.
 /// </summary>
-public ref partial struct ValueStringBuilder
+[ExcludeFromCodeCoverage]
+#if PUBLIC_EXTENSIONS
+public
+#endif
+ref struct ValueStringBuilder
 {
     private char[]? _arrayToReturnToPool;
     private Span<char> _chars;

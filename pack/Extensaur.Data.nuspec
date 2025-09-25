@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>Extensaur.Data</id>
+    <version>1.0.0</version>
+    <authors>LoreSoft</authors>
+    <developmentDependency>true</developmentDependency>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <icon>logo.png</icon>
+    <readme>README.md</readme>
+    <projectUrl>https://github.com/loresoft/Extensaur</projectUrl>
+  <description>Source Package for Data Extension methods for IDataRecord and data access, simplifying and enhancing .NET data operations.</description>
+  <copyright>Copyright © 2025 LoreSoft</copyright>
+  <tags>data extension-methods data-access</tags>
+    <repository type="git" url="https://github.com/loresoft/Extensaur" />
+  </metadata>
+  <files>
+    <file src="..\logo.png" target="logo.png" />
+    <file src="..\src\Extensaur\Data\README.md" target="README.md"/>
+    <file src=".\Extensaur.Data.props" target="build/Extensaur.Data.props" />
+    <file src="..\src\Extensaur\Data\*.cs" target="contentFiles/cs/net8.0/Extensaur/Data/"/>
+  </files>
+</package>

@@ -1,6 +1,9 @@
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+
 #nullable enable
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -14,7 +17,11 @@ namespace System.Reflection;
 /// automatically handling type resolution and member lookup. It supports both public and non-public members
 /// through configurable binding flags.
 /// </remarks>
-public static class LateBinder
+[ExcludeFromCodeCoverage]
+#if PUBLIC_EXTENSIONS
+public
+#endif
+static class LateBinder
 {
     /// <summary>
     /// Default binding flags for public members including instance members and flattened hierarchy.
@@ -78,7 +85,7 @@ public static class LateBinder
     /// <param name="propertyExpression">The property expression (e.g. p => p.PropertyName) that identifies the property to find.</param>
     /// <returns>An <see cref="IMemberAccessor"/> instance for the property if found; otherwise <c>null</c>.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="propertyExpression"/> is <c>null</c>.</exception>
-    /// <exception cref="ArgumentException">Thrown when the expression is not a <see cref="MemberExpression"/>, 
+    /// <exception cref="ArgumentException">Thrown when the expression is not a <see cref="MemberExpression"/>,
     /// the <see cref="MemberExpression"/> does not represent a property, or the property is static.</exception>
     /// <remarks>
     /// This method provides compile-time safety for property access by using strongly-typed expressions.
@@ -231,7 +238,7 @@ public static class LateBinder
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="target"/> or <paramref name="name"/> is <c>null</c> or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the property is not found in the target object's type.</exception>
     /// <remarks>
-    /// This method supports nested property names using dot notation. For example, 'Person.Address.ZipCode' 
+    /// This method supports nested property names using dot notation. For example, 'Person.Address.ZipCode'
     /// will navigate through the object hierarchy to set the final property value.
     /// </remarks>
     public static void SetProperty(object target, string name, object? value)
@@ -249,7 +256,7 @@ public static class LateBinder
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="target"/> or <paramref name="name"/> is <c>null</c> or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the property is not found in the target object's type.</exception>
     /// <remarks>
-    /// This method supports nested property names using dot notation. For example, 'Person.Address.ZipCode' 
+    /// This method supports nested property names using dot notation. For example, 'Person.Address.ZipCode'
     /// will navigate through the object hierarchy to set the final property value.
     /// </remarks>
     public static void SetProperty(object target, string name, object? value, BindingFlags flags)
@@ -528,7 +535,7 @@ public static class LateBinder
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="type"/> or <paramref name="name"/> is <c>null</c> or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the method is not found in the specified type.</exception>
     /// <remarks>
-    /// This method allows invoking both instance and static methods. For static methods, pass <c>null</c> 
+    /// This method allows invoking both instance and static methods. For static methods, pass <c>null</c>
     /// as the target parameter. The arguments are used for method overload resolution.
     /// </remarks>
     public static object? InvokeMethod(Type type, object? target, string name, params object?[] arguments)

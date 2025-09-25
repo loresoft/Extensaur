@@ -1,3 +1,5 @@
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+
 #nullable enable
 
 namespace System.Reflection;
@@ -9,7 +11,10 @@ namespace System.Reflection;
 /// This interface provides a high-performance way to invoke methods using compiled expressions
 /// rather than traditional reflection, while maintaining type safety and flexibility.
 /// </remarks>
-public interface IMethodAccessor
+#if PUBLIC_EXTENSIONS
+public
+#endif
+interface IMethodAccessor
 {
     /// <summary>
     /// Gets the <see cref="System.Reflection.MethodInfo"/> that describes this method.

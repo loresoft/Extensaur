@@ -1,18 +1,29 @@
-using System.Data.Common;
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 
 #nullable enable
+
+using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 
 namespace System.Data;
 
 /// <summary>
-/// Extension methods for <see cref="IDataRecord"/>.
+/// Provides extension methods for <see cref="IDataRecord"/> to simplify data access operations.
 /// </summary>
-public static class DataRecordExtensions
+[ExcludeFromCodeCoverage]
+#if PUBLIC_EXTENSIONS
+public
+#endif
+static class DataRecordExtensions
 {
-    /// <summary>Gets the value of the specified column.</summary>
-    /// <param name="dataRecord">The data record.</param>
+    /// <summary>
+    /// Gets the value of the specified column by name, returning null if the value is <see cref="DBNull"/>.
+    /// </summary>
+    /// <param name="dataRecord">The data record to retrieve the value from.</param>
     /// <param name="name">The name of the column to find.</param>
-    /// <returns>The value of the specified column.</returns>
+    /// <returns>The value of the specified column, or null if the value is <see cref="DBNull"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="dataRecord"/> is null.</exception>
+    /// <exception cref="IndexOutOfRangeException">Thrown when no column with the specified name was found.</exception>
     public static object? GetValue(this IDataRecord dataRecord, string name)
     {
         if (dataRecord is null)
@@ -25,12 +36,16 @@ public static class DataRecordExtensions
     }
 
     /// <summary>
-    /// Gets the value of the specified column as the requested type.
+    /// Gets the value of the specified column by name and converts it to the requested type.
+    /// Returns the default value of <typeparamref name="T"/> if the column value is <see cref="DBNull"/>.
     /// </summary>
-    /// <typeparam name="T">The record value type</typeparam>
-    /// <param name="dataRecord">The data record.</param>
+    /// <typeparam name="T">The type to convert the column value to.</typeparam>
+    /// <param name="dataRecord">The data record to retrieve the value from.</param>
     /// <param name="name">The name of the column to find.</param>
-    /// <returns>The value of the specified column.</returns>
+    /// <returns>The value of the specified column converted to <typeparamref name="T"/>, or the default value of <typeparamref name="T"/> if the column value is <see cref="DBNull"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="dataRecord"/> is null.</exception>
+    /// <exception cref="IndexOutOfRangeException">Thrown when no column with the specified name was found.</exception>
+    /// <exception cref="InvalidCastException">Thrown when the column value cannot be converted to <typeparamref name="T"/>.</exception>
     public static T? GetValue<T>(this IDataRecord dataRecord, string name)
     {
         if (dataRecord is null)
@@ -42,12 +57,16 @@ public static class DataRecordExtensions
     }
 
     /// <summary>
-    /// Gets the value of the specified column as the requested type.
+    /// Gets the value of the specified column by ordinal position and converts it to the requested type.
+    /// Returns the default value of <typeparamref name="T"/> if the column value is <see cref="DBNull"/>.
     /// </summary>
-    /// <typeparam name="T">The record value type</typeparam>
-    /// <param name="dataRecord">The data record.</param>
-    /// <param name="ordinal">The zero-based column ordinal.</param>
-    /// <returns>The value of the specified column.</returns>
+    /// <typeparam name="T">The type to convert the column value to.</typeparam>
+    /// <param name="dataRecord">The data record to retrieve the value from.</param>
+    /// <param name="ordinal">The zero-based column ordinal position.</param>
+    /// <returns>The value of the specified column converted to <typeparamref name="T"/>, or the default value of <typeparamref name="T"/> if the column value is <see cref="DBNull"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="dataRecord"/> is null.</exception>
+    /// <exception cref="IndexOutOfRangeException">Thrown when the column ordinal is out of range.</exception>
+    /// <exception cref="InvalidCastException">Thrown when the column value cannot be converted to <typeparamref name="T"/>.</exception>
     public static T? GetValue<T>(this IDataRecord dataRecord, int ordinal)
     {
         if (dataRecord is null)
@@ -62,14 +81,17 @@ public static class DataRecordExtensions
         return (T)dataRecord.GetValue(ordinal);
     }
 
-    /// <summary>Determines whether the specified field is set to <see langword="null"/>.</summary>
-    /// <param name="dataRecord">The data record.</param>
-    /// <param name="name">The <paramref name="name"/> of the field to find.</param>
-    /// <returns><c>true</c> if the specified field is set to <see langword="null"/>; otherwise, <c>false</c>.</returns>
+    /// <summary>
+    /// Determines whether the specified column contains a <see cref="DBNull"/> value.
+    /// </summary>
+    /// <param name="dataRecord">The data record to check.</param>
+    /// <param name="name">The name of the column to check for <see cref="DBNull"/>.</param>
+    /// <returns><c>true</c> if the specified column is set to <see cref="DBNull"/>; otherwise, <c>false</c>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="dataRecord"/> is null.</exception>
+    /// <exception cref="IndexOutOfRangeException">Thrown when no column with the specified name was found.</exception>
     public static bool IsDBNull(this IDataRecord dataRecord, string name)
     {
         int ordinal = dataRecord.GetOrdinal(name);
         return dataRecord.IsDBNull(ordinal);
     }
-
 }

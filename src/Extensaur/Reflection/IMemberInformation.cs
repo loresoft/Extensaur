@@ -1,3 +1,5 @@
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+
 #nullable enable
 
 using System.ComponentModel.DataAnnotations;
@@ -13,7 +15,10 @@ namespace System.Reflection;
 /// and database-specific mapping metadata. It's commonly used in ORM scenarios where properties need to be
 /// mapped to database columns with additional metadata like keys, foreign keys, and concurrency tokens.
 /// </remarks>
-public interface IMemberInformation
+#if PUBLIC_EXTENSIONS
+public
+#endif
+interface IMemberInformation
 {
     /// <summary>
     /// Gets the <see cref="Type"/> of the member.

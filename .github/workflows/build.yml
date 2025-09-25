@@ -36,7 +36,7 @@ jobs:
     - name: Install .NET Core
       uses: actions/setup-dotnet@v4
       with:
-          dotnet-version: 8.0.x
+          dotnet-version: 9.0.x
 
     - name: Restore Dependencies
       run: dotnet restore
@@ -57,6 +57,21 @@ jobs:
     - name: Create Packages
       if: success() && github.event_name != 'pull_request'
       run: dotnet pack --configuration Release --include-symbols --include-source --no-build --output "${{env.BUILD_PATH}}"
+
+
+    - name: Get Version
+      id: minver
+      run: |
+        dotnet tool install --global minver-cli
+        echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+        echo "version=$(minver -t v)" >> $GITHUB_OUTPUT
+
+    - name: Create Source Packages
+      run: |
+        for package in $(find -name "/pack/*.nuspec"); do
+          echo "${0##*/}": Packages $package...
+          nuget pack $package -Version ${{ steps.minver.outputs.version }} -OutputDirectory "${{env.BUILD_PATH}}"
+        done
 
     - name: Upload Packages
       if: success() && github.event_name != 'pull_request'

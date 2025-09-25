@@ -1,11 +1,21 @@
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+
 #nullable enable
+
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace System.Reflection;
 
 /// <summary>
 /// An accessor class for <see cref="FieldInfo"/> that provides late binding access to field members.
 /// </summary>
-public class FieldAccessor : MemberAccessor
+[ExcludeFromCodeCoverage]
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
+#if PUBLIC_EXTENSIONS
+public
+#endif
+class FieldAccessor : MemberAccessor
 {
     /// <summary>
     /// A lazy-initialized getter function for retrieving the field value.
@@ -114,4 +124,9 @@ public class FieldAccessor : MemberAccessor
 
         set(instance, value);
     }
+
+    /// <summary>
+    /// Gets a string representation of the <see cref="FieldAccessor"/> for debugging purposes.
+    /// </summary>
+    private string DebuggerDisplay => $"Name: {Name}";
 }

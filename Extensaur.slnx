@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/Build/">
+    <File Path=".github/workflows/build.yml" />
+    <File Path="README.md" />
+    <File Path="src/Directory.Build.props" />
+  </Folder>
+  <Project Path="src/Extensaur/Extensaur.csproj" />
+  <Project Path="test/Extensaur.Performance/Extensaur.Performance.csproj" />
+  <Project Path="test/Extensaur.Tests/Extensaur.Tests.csproj" />
+</Solution>

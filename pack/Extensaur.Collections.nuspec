@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>Extensaur.Collections</id>
+    <version>1.0.0</version>
+    <authors>LoreSoft</authors>
+    <developmentDependency>true</developmentDependency>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <icon>logo.png</icon>
+    <readme>README.md</readme>
+    <projectUrl>https://github.com/loresoft/Extensaur</projectUrl>
+  <description>Source Package for Collections Extension methods for collections, dictionaries, and enumerables, providing high-performance utilities for .NET.</description>
+  <copyright>Copyright © 2025 LoreSoft</copyright>
+  <tags>collections dictionary enumerable extension-methods</tags>
+    <repository type="git" url="https://github.com/loresoft/Extensaur" />
+  </metadata>
+  <files>
+    <file src="..\logo.png" target="logo.png" />
+    <file src="..\src\Extensaur\Collections\README.md" target="README.md"/>
+    <file src=".\Extensaur.Collections.props" target="build/Extensaur.Collections.props" />
+    <file src="..\src\Extensaur\Collections\*.cs" target="contentFiles/cs/net8.0/Extensaur/Collections/"/>
+  </files>
+</package>

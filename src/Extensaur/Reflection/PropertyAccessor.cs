@@ -1,4 +1,9 @@
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+
 #nullable enable
+
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace System.Reflection;
 
@@ -11,13 +16,18 @@ namespace System.Reflection;
 /// the flexibility of reflection. The compiled expressions are created using the <see cref="ExpressionFactory"/>
 /// which generates optimized delegates for property access operations.
 /// </remarks>
-public class PropertyAccessor : MemberAccessor
+[ExcludeFromCodeCoverage]
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
+#if PUBLIC_EXTENSIONS
+public
+#endif
+class PropertyAccessor : MemberAccessor
 {
     /// <summary>
     /// A lazy-initialized getter function for retrieving the property value with high performance.
     /// </summary>
     private readonly Lazy<Func<object, object?>?> _getter;
-    
+
     /// <summary>
     /// A lazy-initialized setter action for setting the property value with high performance.
     /// </summary>
@@ -128,4 +138,9 @@ public class PropertyAccessor : MemberAccessor
 
         set(instance!, value);
     }
+
+    /// <summary>
+    /// Gets a string representation of the <see cref="PropertyAccessor"/> for debugging purposes.
+    /// </summary>
+    private string DebuggerDisplay => $"Name: {Name}";
 }

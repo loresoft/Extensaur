@@ -1,3 +1,5 @@
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+
 #nullable enable
 
 namespace System.Reflection;
@@ -10,7 +12,10 @@ namespace System.Reflection;
 /// through reflection-based getters and setters. Implementations of this interface typically use
 /// compiled expressions for high-performance member access.
 /// </remarks>
-public interface IMemberAccessor : IMemberInformation
+#if PUBLIC_EXTENSIONS
+public
+#endif
+interface IMemberAccessor : IMemberInformation
 {
     /// <summary>
     /// Returns the value of the member for the specified instance.

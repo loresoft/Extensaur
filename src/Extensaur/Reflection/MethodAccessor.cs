@@ -1,7 +1,10 @@
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+
 #nullable enable
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace System.Reflection;
 
@@ -13,8 +16,12 @@ namespace System.Reflection;
 /// to provide fast method invocation while maintaining the flexibility of reflection. The compiled expressions
 /// are created using the <see cref="ExpressionFactory"/> which generates optimized delegates for method calls.
 /// </remarks>
-[DebuggerDisplay("Name: {Name}")]
-public class MethodAccessor : IMethodAccessor
+[ExcludeFromCodeCoverage]
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
+#if PUBLIC_EXTENSIONS
+public
+#endif
+class MethodAccessor : IMethodAccessor
 {
     /// <summary>
     /// A lazy-initialized invoker function for calling the method with high performance.
@@ -98,4 +105,9 @@ public class MethodAccessor : IMethodAccessor
 
         return hashCode;
     }
+
+    /// <summary>
+    /// Gets a string representation of the <see cref="MethodAccessor"/> for debugging purposes.
+    /// </summary>
+    private string DebuggerDisplay => $"Name: {Name}";
 }

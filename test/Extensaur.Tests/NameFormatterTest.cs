@@ -1,4 +1,4 @@
-using Extensaur.Text;
+using System.Text;
 
 namespace Extensaur.Tests;
 
@@ -229,7 +229,7 @@ public class NameFormatterTest
     [Fact]
     public void StringFormat_WithDictionaryMultipleExpressions()
     {
-        var o = new Dictionary<string, string> { ["First"] = "John", ["Last"] = "Doe"};
+        var o = new Dictionary<string, string> { ["First"] = "John", ["Last"] = "Doe" };
         string result = NameFormatter.FormatName("Full Name: {First} {Last}", o);
 
         //assert

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
   <metadata>
-    <id>Extensaur.Reflection</id>
+    <id>Extensaur.System</id>
     <version>1.0.0</version>
     <authors>LoreSoft</authors>
     <developmentDependency>true</developmentDependency>
@@ -10,15 +10,15 @@
     <icon>logo.png</icon>
     <readme>README.md</readme>
     <projectUrl>https://github.com/loresoft/Extensaur</projectUrl>
-    <description>Source Package for Reflection - High-performance compiled expression-based reflection utilities for .NET</description>
+    <description>Source Package for System Extension methods and utilities including safe type conversion, string manipulation, date/time operations, timezone conversion, and type reflection helpers for .NET.</description>
     <copyright>Copyright © 2025 LoreSoft</copyright>
-    <tags>reflection compiled-expressions type-accessor late-binding property-accessor field-accessor method-accessor data-annotations member-access</tags>
+    <tags>extension-methods type-conversion string-utilities</tags>
     <repository type="git" url="https://github.com/loresoft/Extensaur" />
   </metadata>
   <files>
     <file src="..\logo.png" target="logo.png" />
-    <file src="..\src\Extensaur\Reflection\README.md" target="README.md"/>
-    <file src=".\Extensaur.Reflection.props" target="build/Extensaur.Reflection.props" />
-    <file src="..\src\Extensaur\Reflection\*.cs" target="contentFiles/cs/net8.0/Extensaur/Reflection/"/>
+    <file src="..\src\Extensaur\System\README.md" target="README.md"/>
+    <file src=".\Extensaur.System.props" target="build/Extensaur.System.props" />
+    <file src="..\src\Extensaur\System\*.cs" target="contentFiles/cs/net8.0/Extensaur/System/"/>
   </files>
 </package>
