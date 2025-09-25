@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
   <metadata>
     <id>Extensaur.Text</id>
-    <version>1.0.0</version>
+    <version>$version$</version>
     <authors>LoreSoft</authors>
     <developmentDependency>true</developmentDependency>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>

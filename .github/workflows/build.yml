@@ -37,11 +37,6 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
-      - name: Install NuGet
-        uses: nuget/setup-nuget@v2
-        with:
-          nuget-version: "latest"
-
       - name: Restore Dependencies
         run: dotnet restore
 
@@ -66,7 +61,7 @@ jobs:
         run: |
           for package in ./pack/*.nuspec; do
             echo "${0##*/}": Packaging $package...
-            nuget pack $package -Version ${{ steps.minver.outputs.version }} -OutputDirectory "${{env.BUILD_PATH}}"
+            dotnet pack $package -p:Version=${{ steps.minver.outputs.version }} --output "${{env.BUILD_PATH}}"
           done
 
       - name: Upload Packages
