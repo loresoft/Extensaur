@@ -206,3 +206,19 @@ Add the following to your project file (`.csproj`) to make the extension classes
 - All extension classes remain `internal`
 - Main functionality is still accessible through the public interfaces
 - Cleaner public API surface for most use cases
+
+### Language Version
+
+This package uses modern C# language features and requires C# 11.0 or later. If your project doesn't build or you encounter compiler errors, ensure your project is configured to use the latest C# language version:
+
+```xml
+<PropertyGroup>
+  <LangVersion>latest</LangVersion>
+</PropertyGroup>
+```
+
+**Why this is required:**
+
+- The package uses modern C# features like file-scoped namespaces, global using statements, and improved pattern matching
+- Older C# language versions may not recognize these syntax features
+- Using `latest` ensures compatibility with the newest language features

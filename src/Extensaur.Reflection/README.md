@@ -327,32 +327,6 @@ var email = LateBinder.Get(person, "Email");
 var result = LateBinder.InvokeMethod(person, "CompareTo", otherPerson);
 ```
 
-## Compiler Configuration
-
-### PUBLIC_EXTENSIONS Flag
-
-By default, the classes in this package are marked as `internal` to avoid namespace pollution in consuming projects. If you need direct access to classes from outside the assembly, you can make them `public` by defining the `PUBLIC_EXTENSIONS` compiler constant.
-
-Add the following to your project file (`.csproj`) to make the extension classes public:
-
-```xml
-<PropertyGroup>
-  <DefineConstants>$(DefineConstants);PUBLIC_EXTENSIONS</DefineConstants>
-</PropertyGroup>
-```
-
-**When to use PUBLIC_EXTENSIONS:**
-
-- You need direct access to extension classes from outside the assembly
-- You're building libraries that extend or wrap this functionality
-- You need to expose reflection utilities in your public API
-
-**Default behavior (without PUBLIC_EXTENSIONS):**
-
-- All extension classes remain `internal`
-- Main functionality is still accessible through the public interfaces
-- Cleaner public API surface for most use cases
-
 ## Performance Benefits
 
 This package provides significant performance improvements over traditional reflection:
@@ -381,3 +355,45 @@ This package is designed to work well with Object-Relational Mapping scenarios:
 - Table and schema name resolution
 
 The comprehensive metadata provided by `IMemberInformation` makes it ideal for building ORM tools, object mappers, serializers, and other data access libraries that need efficient member access combined with rich metadata
+
+## Compiler Configuration
+
+### PUBLIC_EXTENSIONS
+
+By default, the classes in this package are marked as `internal` to avoid namespace pollution in consuming projects. If you need direct access to classes from outside the assembly, you can make them `public` by defining the `PUBLIC_EXTENSIONS` compiler constant.
+
+Add the following to your project file (`.csproj`) to make the extension classes public:
+
+```xml
+<PropertyGroup>
+  <DefineConstants>$(DefineConstants);PUBLIC_EXTENSIONS</DefineConstants>
+</PropertyGroup>
+```
+
+**When to use PUBLIC_EXTENSIONS:**
+
+- You need direct access to extension classes from outside the assembly
+- You're building libraries that extend or wrap this functionality
+- You need to expose reflection utilities in your public API
+
+**Default behavior (without PUBLIC_EXTENSIONS):**
+
+- All extension classes remain `internal`
+- Main functionality is still accessible through the public interfaces
+- Cleaner public API surface for most use cases
+
+### Language Version
+
+This package uses modern C# language features and requires C# 11.0 or later. If your project doesn't build or you encounter compiler errors, ensure your project is configured to use the latest C# language version:
+
+```xml
+<PropertyGroup>
+  <LangVersion>latest</LangVersion>
+</PropertyGroup>
+```
+
+**Why this is required:**
+
+- The package uses modern C# features like file-scoped namespaces, global using statements, and improved pattern matching
+- Older C# language versions may not recognize these syntax features
+- Using `latest` ensures compatibility with the newest language features

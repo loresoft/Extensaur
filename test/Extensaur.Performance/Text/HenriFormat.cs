@@ -10,10 +10,10 @@ public static class HenriFormat
 {
     public static string Format(string format, object source)
     {
-        if (format == null)
+        if (format is null)
             throw new ArgumentNullException(nameof(format));
 
-        if (source == null)
+        if (source is null)
             return format;
 
         var result = new StringBuilder(format.Length * 2);
@@ -131,7 +131,7 @@ public static class HenriFormat
 
     private static string FormatValue<T>(string format, T value)
     {
-        if (value == null)
+        if (value is null)
             return string.Empty;
 
         var formatted = string.IsNullOrEmpty(format)
