@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <Description>Source Package for Reflection - High-performance compiled expression-based reflection utilities for .NET</Description>
+    <PackageTags>reflection;compiled-expressions;type-accessor;late-binding;property-accessor;field-accessor;method-accessor;data-annotations;member-access</PackageTags>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <BuildTransitive>true</BuildTransitive>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Extensaur.Reflection.props">
+      <Pack>true</Pack>
+      <PackagePath>build\</PackagePath>
+    </None>
+    <None Include="README.md">
+      <Pack>true</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <Compile Include="..\Extensaur\Reflection\*.cs">
+      <Pack>true</Pack>
+      <PackagePath>contentFiles\cs\any\Extensaur\Reflection</PackagePath>
+    </Compile>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <Description>Source Package for Data Extension methods for IDataRecord and data access, simplifying and enhancing .NET data operations</Description>
+    <PackageTags>data;extension-methods;data-access</PackageTags>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <BuildTransitive>true</BuildTransitive>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Extensaur.Data.props">
+      <Pack>true</Pack>
+      <PackagePath>build\</PackagePath>
+    </None>
+    <None Include="README.md">
+      <Pack>true</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <Compile Include="..\Extensaur\Data\*.cs">
+      <Pack>true</Pack>
+      <PackagePath>contentFiles\cs\any\Extensaur\Data\</PackagePath>
+    </Compile>
+  </ItemGroup>
+
+</Project>

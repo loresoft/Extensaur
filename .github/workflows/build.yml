@@ -50,20 +50,6 @@ jobs:
         if: success() && github.event_name != 'pull_request'
         run: dotnet pack --configuration Release --include-symbols --include-source --no-build --output "${{env.BUILD_PATH}}"
 
-      - name: Get Version
-        id: minver
-        run: |
-          dotnet tool install --global minver-cli
-          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
-          echo "version=$(minver -t v)" >> $GITHUB_OUTPUT
-
-      - name: Create Source Packages
-        run: |
-          for package in ./pack/*.nuspec; do
-            echo "${0##*/}": Packaging $package...
-            dotnet pack $package -p:Version=${{ steps.minver.outputs.version }} --output "${{env.BUILD_PATH}}"
-          done
-
       - name: Upload Packages
         if: success() && github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4

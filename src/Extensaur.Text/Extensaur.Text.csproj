@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <Description>Source Package for Text Extension methods and utilities for string formatting, StringBuilder, and high-performance value-based string building in .NET</Description>
+    <PackageTags>text;string-formatting;string-builder;extension-methods</PackageTags>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <BuildTransitive>true</BuildTransitive>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Extensaur.Text.props">
+      <Pack>true</Pack>
+      <PackagePath>build\</PackagePath>
+    </None>
+    <None Include="README.md">
+      <Pack>true</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <Compile Include="..\Extensaur\Text\*.cs">
+      <Pack>true</Pack>
+      <PackagePath>contentFiles\cs\any\Extensaur\Text</PackagePath>
+    </Compile>
+  </ItemGroup>
+
+</Project>

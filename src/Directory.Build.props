@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup Label="Package">
-    <Description>Extensaur is a collection of thoughtfully crafted extension methods designed to enhance your .NET development experience.</Description>
+    <Description>Extensaur is a collection of extension methods designed to enhance your .NET development experience.</Description>
     <Copyright>Copyright © $([System.DateTime]::Now.ToString(yyyy)) LoreSoft</Copyright>
     <Authors>LoreSoft</Authors>
     <NeutralLanguage>en-US</NeutralLanguage>
@@ -44,11 +44,6 @@
 
   <ItemGroup>
     <None Include=".\..\..\logo.png">
-      <Pack>true</Pack>
-      <PackagePath>\</PackagePath>
-      <Visible>false</Visible>
-    </None>
-    <None Include=".\..\..\README.md">
       <Pack>true</Pack>
       <PackagePath>\</PackagePath>
       <Visible>false</Visible>

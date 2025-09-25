@@ -25,6 +25,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include=".\..\..\README.md">
+      <Pack>true</Pack>
+      <PackagePath>\</PackagePath>
+      <Visible>false</Visible>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>Extensaur.Tests</_Parameter1>
     </AssemblyAttribute>

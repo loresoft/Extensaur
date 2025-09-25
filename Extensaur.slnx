@@ -4,7 +4,16 @@
     <File Path="README.md" />
     <File Path="src/Directory.Build.props" />
   </Folder>
+  <Folder Name="/Packages/">
+    <Project Path="src/Extensaur.Collections/Extensaur.Collections.csproj" />
+    <Project Path="src/Extensaur.Data/Extensaur.Data.csproj" />
+    <Project Path="src/Extensaur.Reflection/Extensaur.Reflection.csproj" />
+    <Project Path="src/Extensaur.System/Extensaur.System.csproj" />
+    <Project Path="src/Extensaur.Text/Extensaur.Text.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="test/Extensaur.Performance/Extensaur.Performance.csproj" />
+    <Project Path="test/Extensaur.Tests/Extensaur.Tests.csproj" />
+  </Folder>
   <Project Path="src/Extensaur/Extensaur.csproj" />
-  <Project Path="test/Extensaur.Performance/Extensaur.Performance.csproj" />
-  <Project Path="test/Extensaur.Tests/Extensaur.Tests.csproj" />
 </Solution>

@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <Description>Source Package for Collections Extension methods for collections, dictionaries, and enumerables, providing high-performance utilities for .NET</Description>
+    <PackageTags>collections;dictionary;enumerable;extension-methods</PackageTags>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <BuildTransitive>true</BuildTransitive>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Extensaur.Collections.props">
+      <Pack>true</Pack>
+      <PackagePath>build\</PackagePath>
+    </None>
+    <None Include="README.md">
+      <Pack>true</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <Compile Include="..\Extensaur\Collections\*.cs">
+      <Pack>true</Pack>
+      <PackagePath>contentFiles\cs\any\Extensaur\Collections</PackagePath>
+    </Compile>
+  </ItemGroup>
+
+</Project>

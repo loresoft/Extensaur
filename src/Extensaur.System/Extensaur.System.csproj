@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <Description>Source Package for System Extension methods and utilities including safe type conversion, string manipulation, date/time operations, timezone conversion, and type reflection helpers for .NET</Description>
+    <PackageTags>extension-methods;type-conversion;string-utilities</PackageTags>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <BuildTransitive>true</BuildTransitive>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Extensaur.System.props">
+      <Pack>true</Pack>
+      <PackagePath>build\</PackagePath>
+    </None>
+    <None Include="README.md">
+      <Pack>true</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <Compile Include="..\Extensaur\System\*.cs">
+      <Pack>true</Pack>
+      <PackagePath>contentFiles\cs\any\Extensaur\System</PackagePath>
+    </Compile>
+  </ItemGroup>
+
+</Project>
