@@ -61,7 +61,7 @@ jobs:
 
     - name: Create Source Packages
       run: |
-        for package in $(find -name "/pack/*.nuspec"); do
+        for package in $(find -name "./pack/*.nuspec"); do
           echo "${0##*/}": Packages $package...
           nuget pack $package -Version ${{ steps.minver.outputs.version }} -OutputDirectory "${{env.BUILD_PATH}}"
         done
