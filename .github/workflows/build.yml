@@ -5,7 +5,7 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_ENVIRONMENT: github
   ASPNETCORE_ENVIRONMENT: github
-  BUILD_PATH: '${{github.workspace}}/artifacts'
+  BUILD_PATH: "${{github.workspace}}/artifacts"
 
 on:
   push:
@@ -13,66 +13,68 @@ on:
       - main
       - develop
     tags:
-      - 'v*'
+      - "v*"
     paths-ignore:
-      - 'docs/**'
-      - 'mkdocs.yml'
+      - "docs/**"
+      - "mkdocs.yml"
   pull_request:
     branches:
       - main
       - develop
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
-    - name: Install .NET Core
-      uses: actions/setup-dotnet@v5
-      with:
+      - name: Install .NET Core
+        uses: actions/setup-dotnet@v5
+        with:
           dotnet-version: 9.0.x
 
-    - name: Restore Dependencies
-      run: dotnet restore
+      - name: Install NuGet
+        uses: nuget/setup-nuget@v2
+        with:
+          nuget-version: "latest"
 
-    - name: Build Solution
-      run: dotnet build --no-restore --configuration Release
+      - name: Restore Dependencies
+        run: dotnet restore
 
-    - name: Run Test
-      run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage" --settings coverlet.runsettings
+      - name: Build Solution
+        run: dotnet build --no-restore --configuration Release
 
-    - name: Create Packages
-      if: success() && github.event_name != 'pull_request'
-      run: dotnet pack --configuration Release --include-symbols --include-source --no-build --output "${{env.BUILD_PATH}}"
+      - name: Run Test
+        run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage" --settings coverlet.runsettings
 
+      - name: Create Packages
+        if: success() && github.event_name != 'pull_request'
+        run: dotnet pack --configuration Release --include-symbols --include-source --no-build --output "${{env.BUILD_PATH}}"
 
-    - name: Get Version
-      id: minver
-      run: |
-        dotnet tool install --global minver-cli
-        dotnet tool install --global NuGet.CommandLine
-        echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
-        echo "version=$(minver -t v)" >> $GITHUB_OUTPUT
+      - name: Get Version
+        id: minver
+        run: |
+          dotnet tool install --global minver-cli
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+          echo "version=$(minver -t v)" >> $GITHUB_OUTPUT
 
-    - name: Create Source Packages
-      run: |
-        for package in ./pack/*.nuspec; do
-          echo "${0##*/}": Packaging $package...
-          nuget pack $package -Version ${{ steps.minver.outputs.version }} -OutputDirectory "${{env.BUILD_PATH}}"
-        done
+      - name: Create Source Packages
+        run: |
+          for package in ./pack/*.nuspec; do
+            echo "${0##*/}": Packaging $package...
+            nuget pack $package -Version ${{ steps.minver.outputs.version }} -OutputDirectory "${{env.BUILD_PATH}}"
+          done
 
-    - name: Upload Packages
-      if: success() && github.event_name != 'pull_request'
-      uses: actions/upload-artifact@v4
-      with:
-        name: packages
-        path: '${{env.BUILD_PATH}}'
+      - name: Upload Packages
+        if: success() && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: "${{env.BUILD_PATH}}"
 
   deploy:
     runs-on: ubuntu-latest
@@ -80,29 +82,29 @@ jobs:
     if: success() && github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
 
     steps:
-    - name: Download Artifact
-      uses: actions/download-artifact@v5
-      with:
-        name: packages
+      - name: Download Artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: packages
 
-    - name: Publish Packages GitHub
-      run: |
-        for package in $(find -name "*.nupkg"); do
-          echo "${0##*/}": Pushing $package...
-          dotnet nuget push $package --source https://nuget.pkg.github.com/loresoft/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
-        done
+      - name: Publish Packages GitHub
+        run: |
+          for package in *.nupkg"; do
+            echo "${0##*/}": Pushing $package...
+            dotnet nuget push $package --source https://nuget.pkg.github.com/loresoft/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
+          done
 
-    - name: Publish Packages feedz
-      run: |
-        for package in $(find -name "*.nupkg"); do
-          echo "${0##*/}": Pushing $package...
-          dotnet nuget push $package --source https://f.feedz.io/loresoft/open/nuget/index.json --api-key ${{ secrets.FEEDDZ_KEY }} --skip-duplicate
-        done
+      - name: Publish Packages feedz
+        run: |
+          for package in *.nupkg; do
+            echo "${0##*/}": Pushing $package...
+            dotnet nuget push $package --source https://f.feedz.io/loresoft/open/nuget/index.json --api-key ${{ secrets.FEEDDZ_KEY }} --skip-duplicate
+          done
 
-    - name: Publish Packages Nuget
-      if: startsWith(github.ref, 'refs/tags/v')
-      run: |
-        for package in $(find -name "*.nupkg"); do
-          echo "${0##*/}": Pushing $package...
-          dotnet nuget push $package --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_KEY }} --skip-duplicate
-        done
+      - name: Publish Packages Nuget
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          for package in *.nupkg; do
+            echo "${0##*/}": Pushing $package...
+            dotnet nuget push $package --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_KEY }} --skip-duplicate
+          done
