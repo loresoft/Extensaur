@@ -34,8 +34,11 @@ static class EnumerableExtensions
     /// </remarks>
     public static object ElementAt(this IEnumerable source, int index)
     {
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        if (source is null)
+            throw new ArgumentNullException(nameof(source));
+
+        if (index < 0)
+            throw new ArgumentOutOfRangeException(nameof(index), "Index cannot be negative.");
 
         var item = source.ElementAtOrDefault(index);
 

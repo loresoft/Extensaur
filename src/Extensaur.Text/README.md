@@ -2,7 +2,7 @@
 
 Source only package for Text extension methods and text building utilities for .NET
 
-This package provides advanced text manipulation utilities including named placeholder formatting, enhanced StringBuilder operations, and high-performance string building with minimal heap allocations. These tools are designed for scenarios requiring efficient string composition, template processing, and conditional text generation.
+This package provides advanced text manipulation utilities including named placeholder formatting and enhanced StringBuilder operations. These tools are designed for scenarios requiring efficient string composition, template processing, and conditional text generation.
 
 ## Core Classes
 
@@ -113,73 +113,10 @@ var result = new StringBuilder()
 - **Fluent Interface**: All methods return `StringBuilder` for method chaining
 - **Type Safety**: Generic support for any collection type
 
-### ValueStringBuilder
-
-A high-performance, stack-friendly string builder that minimizes heap allocations by using stack-allocated or pooled buffers. Ideal for performance-critical scenarios with predictable string sizes.
-
-```csharp
-using System.Text;
-
-// Stack-allocated buffer for small strings
-Span<char> buffer = stackalloc char[256];
-using var builder = new ValueStringBuilder(buffer);
-
-builder.Append("Processing items: ");
-for (int i = 0; i < items.Length; i++)
-{
-    if (i > 0) builder.Append(", ");
-    builder.Append(items[i].ToString());
-}
-
-string result = builder.ToString(); // Efficient conversion to string
-
-// Pool-based allocation for larger strings
-using var largeBuilder = new ValueStringBuilder(1024);
-largeBuilder.Append("Large content...");
-
-// Insert operations
-largeBuilder.Insert(0, "Prefix: ");
-largeBuilder.Insert(largeBuilder.Length, " :Suffix");
-
-// Span-based operations for maximum efficiency
-ReadOnlySpan<char> content = largeBuilder.AsSpan();
-bool success = largeBuilder.TryCopyTo(destinationBuffer, out int written);
-
-// Character-level access
-for (int i = 0; i < builder.Length; i++)
-{
-    ref char c = ref builder[i]; // Direct reference to buffer
-    if (c == 'a') c = 'A'; // In-place modification
-}
-
-// Advanced buffer management
-builder.EnsureCapacity(500); // Pre-allocate capacity
-Span<char> appendBuffer = builder.AppendSpan(10); // Get span for direct writing
-// Write directly to appendBuffer...
-
-// Null-terminated strings for interop
-ref char pinned = ref builder.GetPinnableReference(terminate: true);
-```
-
-**Key Features:**
-
-- **Zero Heap Allocation**: Uses stack buffers or pooled arrays to avoid GC pressure
-- **High Performance**: Direct buffer manipulation with minimal overhead
-- **Flexible Initialization**: Stack-allocated span or pooled array backing
-- **Direct Buffer Access**: Reference-based character access for in-place modifications
-- **Span Integration**: Full integration with `Span<char>` and `ReadOnlySpan<char>`
-- **Memory Pool Integration**: Automatic return of rented arrays via `Dispose()`
-- **Capacity Management**: Manual capacity control for optimal performance
-
 ## Performance Notes
 
 - **NameFormatter**: Optimized property reflection with minimal overhead for simple properties; nested properties use efficient dot-notation parsing
 - **StringBuilderExtensions**: All operations maintain StringBuilder's performance characteristics while adding convenience
-- **ValueStringBuilder**: Designed for high-performance scenarios:
-  - Stack allocation eliminates heap allocations for small strings (< 256 chars typically)
-  - Pool allocation reduces GC pressure for larger strings
-  - Direct buffer access enables in-place modifications without string copies
-  - Span-based operations provide zero-copy string processing
 
 ## Compiler Configuration
 
