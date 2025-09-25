@@ -12,7 +12,7 @@
   <ItemGroup>
     <None Include="Extensaur.System.props">
       <Pack>true</Pack>
-      <PackagePath>build\</PackagePath>
+      <PackagePath>build</PackagePath>
     </None>
     <None Include="README.md">
       <Pack>true</Pack>
